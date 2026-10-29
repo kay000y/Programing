@@ -8,7 +8,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Streamlit 기본 패딩 및 스크롤바 완벽 제거
+# Streamlit 기본 여백 및 스크롤바 완벽 제거 + 전체 검은색 배경 설정
 st.markdown("""
     <style>
         html, body, [data-testid="stAppViewContainer"], .main, .block-container {
@@ -17,6 +17,7 @@ st.markdown("""
             width: 100vw !important;
             height: 100vh !important;
             overflow: hidden !important;
+            background-color: #000000 !important;
         }
         footer {visibility: hidden;}
         header {visibility: hidden;}
@@ -39,17 +40,27 @@ game_html = """
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background-color: #0f172a;
+        background-color: #000000;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         user-select: none;
         touch-action: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
+    
+    /* 16:9 비율 유지 및 자동 반응형 컨테이너 */
     #gameContainer {
         position: relative;
         width: 100vw;
-        height: 100vh;
+        height: 56.25vw; /* 16:9 비율 유지 */
+        max-height: 100vh;
+        max-width: 177.78vh; /* 16:9 비율 유지 */
+        background-color: #0f172a;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
         overflow: hidden;
     }
+    
     canvas {
         width: 100%;
         height: 100%;
@@ -205,7 +216,7 @@ game_html = """
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     
-    <!-- 좌측 상단 노트 버튼 (크기 키움) -->
+    <!-- 좌측 상단 노트 버튼 -->
     <div id="notebookBtn" class="topBtn" title="Fish Logbook">📓</div>
 
     <!-- 우측 상단 설정 버튼 -->
@@ -240,10 +251,12 @@ game_html = """
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const container = document.getElementById('gameContainer');
 
+// 컨테이너 크기에 맞춰 캔버스 해상도를 동적으로 동기화
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -256,7 +269,7 @@ window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false
 let gameState = 'IDLE';
 let waitTimer = 0;
 let castTimer = 0;
-let rodAngle = 0; // 낚싯대 애니메이션 각도 (라디안)
+let rodAngle = 0;
 let spacePressed = false;
 
 // 페이드아웃 변수
@@ -267,7 +280,6 @@ const messageOverlay = document.getElementById('messageOverlay');
 const caughtFishMap = new Map();
 
 // 어종 및 등급 데이터
-// 등급: 'common' (흰색, 1.0x), 'rare' (파랑, 1.25x), 'legendary' (노랑, 1.5x)
 const FISH_LIST = [
     { name: "고등어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff" },
     { name: "광어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff" },
@@ -292,7 +304,6 @@ window.addEventListener('keydown', (e) => {
         }
         if (e.code === 'Space') e.preventDefault();
     } else if (e.code === 'Escape') {
-        // 찌를 물기 전(WAITING, CASTING) 상태일 때만 취소 가능
         if (gameState === 'WAITING' || gameState === 'CASTING') {
             gameState = 'IDLE';
             showMessage("낚시를 취소했습니다.", "");
@@ -392,10 +403,9 @@ function update() {
         }
     }
 
-    // 낚싯대 던지기 모션 (위로 90도 들었다가 내려놓음)
+    // 낚싯대 던지기 모션
     if (gameState === 'CASTING') {
         castTimer += 0.08;
-        // sin 함수를 활용해 0 -> 90도 -> 0도 왕복
         rodAngle = Math.sin(castTimer) * (Math.PI / 2);
         
         if (castTimer >= Math.PI) {
@@ -421,7 +431,6 @@ function update() {
             fishTarget = Math.random() * 80 + 10;
         }
         
-        // 등급별 속도 차이 적용 (difficulty 반영)
         fishPos += (fishTarget - fishPos) * (0.02 * currentFish.difficulty);
 
         let barEnd = barPos + barSize;
@@ -464,15 +473,14 @@ function drawPixelHatFisherman(x, y) {
     ctx.fillStyle = '#e67e22';
     ctx.fillRect(x - 24, y - 22, 48, 4);
 
-    // 낚싯대 회전 조작 (어부의 손 위치 기준 회전)
+    // 낚싯대 회전 조작
     const handX = x + 5;
     const handY = y - 15;
 
     ctx.save();
     ctx.translate(handX, handY);
-    ctx.rotate(-rodAngle); // 위쪽 방향으로 회전
+    ctx.rotate(-rodAngle);
 
-    // 낚싯대 그리기 (원점 기준)
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 4;
     ctx.beginPath();
@@ -480,13 +488,11 @@ function drawPixelHatFisherman(x, y) {
     ctx.lineTo(55, -45);
     ctx.stroke();
 
-    // 낚싯대 끝의 로컬 좌표를 구해서 낚싯줄 그리기
     const tipX = 55;
     const tipY = -45;
 
     ctx.restore();
 
-    // 회전이 반영된 낚싯대 끝 글로벌 위치 계산
     const globalTipX = handX + tipX * Math.cos(-rodAngle) - tipY * Math.sin(-rodAngle);
     const globalTipY = handY + tipX * Math.sin(-rodAngle) + tipY * Math.cos(-rodAngle);
 
@@ -537,7 +543,7 @@ function drawUI() {
         ctx.fillStyle = '#334155';
         ctx.fillRect(uiX, uiY, uiWidth, uiHeight);
 
-        // 게이지 바 (플레이어 바)
+        // 게이지 바
         let renderBarX = uiX + (barPos / 100) * uiWidth;
         let renderBarW = (barSize / 100) * uiWidth;
         ctx.fillStyle = '#22c55e';
@@ -546,7 +552,7 @@ function drawUI() {
         ctx.lineWidth = 2;
         ctx.strokeRect(renderBarX, uiY, renderBarW, uiHeight);
 
-        // 물고기 아이콘 (등급에 맞춰 색상 적용: 흰색, 파랑, 노랑)
+        // 물고기 아이콘
         let renderFishX = uiX + (fishPos / 100) * uiWidth;
         ctx.fillStyle = currentFish.color;
         ctx.beginPath();
@@ -585,5 +591,4 @@ loop();
 </html>
 """
 
-# 화면 전체 크기로 구성 요소 렌더링
 components.html(game_html, height=1000, scrolling=False)
