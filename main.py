@@ -49,7 +49,6 @@ game_html = """
         align-items: center;
     }
     
-    /* 캔버스 감싸는 컨테이너 */
     #gameContainer {
         position: relative;
         background-color: #0f172a;
@@ -65,7 +64,6 @@ game_html = """
         image-rendering: pixelated;
     }
     
-    /* 좌측 하단 타이틀 & 설명 UI */
     #bottomLeftUI {
         position: absolute;
         bottom: 20px;
@@ -89,7 +87,6 @@ game_html = """
         line-height: 1.4;
     }
 
-    /* 알림 메시지 (상대적 위치 지정) */
     #messageOverlay {
         position: absolute;
         top: 15%;
@@ -116,7 +113,6 @@ game_html = """
         text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
     }
 
-    /* 상단 공통 버튼 스타일 */
     .topBtn {
         position: absolute;
         top: 20px;
@@ -142,14 +138,13 @@ game_html = """
     #notebookBtn { left: 20px; }
     #settingsBtn { right: 20px; }
 
-    /* 모달 공통 스타일 */
     .modal {
         display: none;
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 360px;
+        width: 380px;
         background-color: #1e293b;
         border: 3px solid #38bdf8;
         border-radius: 12px;
@@ -164,7 +159,7 @@ game_html = """
         align-items: center;
         border-bottom: 1px solid #334155;
         padding-bottom: 10px;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
     }
     .modalTitle {
         font-size: 18px;
@@ -181,12 +176,29 @@ game_html = """
         color: #ffffff;
     }
 
-    /* 도감 리스트 */
+    /* 도감 확률 정보 박스 */
+    #rarityRateBox {
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 8px 12px;
+        margin-bottom: 12px;
+        font-size: 12px;
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+    }
+    .rateItem {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
     #caughtList {
         list-style: none;
         padding: 0;
         margin: 0;
-        max-height: 300px;
+        max-height: 280px;
         overflow-y: auto;
     }
     #caughtList li {
@@ -209,7 +221,6 @@ game_html = """
     .rarity-rare { background-color: #3b82f6; color: #ffffff; }
     .rarity-legendary { background-color: #eab308; color: #0f172a; }
 
-    /* 설정 폼 */
     .settingRow {
         display: flex;
         justify-content: space-between;
@@ -237,7 +248,6 @@ game_html = """
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     
-    <!-- 버튼 UI -->
     <div id="notebookBtn" class="topBtn" title="Fish Logbook">📓</div>
     <div id="settingsBtn" class="topBtn" title="Settings">⚙️</div>
 
@@ -247,6 +257,23 @@ game_html = """
             <span class="modalTitle">📖 Caught Fish Log</span>
             <span id="closeNotebook" class="closeBtn">&times;</span>
         </div>
+        
+        <!-- 물고기 등급별 확률 표시 -->
+        <div id="rarityRateBox">
+            <div class="rateItem">
+                <span class="rarityTag rarity-common">일반</span>
+                <span style="color: #cbd5e1;">45%</span>
+            </div>
+            <div class="rateItem">
+                <span class="rarityTag rarity-rare">희귀</span>
+                <span style="color: #cbd5e1;">35%</span>
+            </div>
+            <div class="rateItem">
+                <span class="rarityTag rarity-legendary">전설</span>
+                <span style="color: #cbd5e1;">20%</span>
+            </div>
+        </div>
+
         <ul id="caughtList">
             <li style="color: #94a3b8; justify-content: center;">아직 잡은 물고기가 없습니다.</li>
         </ul>
@@ -270,13 +297,11 @@ game_html = """
         </div>
     </div>
 
-    <!-- 중앙 상단 알림 메시지 -->
     <div id="messageOverlay">
         <div id="statusText">Press SPACE or ENTER to Start Fishing!</div>
         <div id="caughtInfo"></div>
     </div>
 
-    <!-- 좌측 하단 타이틀 & 설명 -->
     <div id="bottomLeftUI">
         <div id="gameTitle">OCEAN ANGLER</div>
         <div id="gameDesc">
@@ -291,14 +316,12 @@ const ctx = canvas.getContext('2d');
 const container = document.getElementById('gameContainer');
 const resolutionSelect = document.getElementById('resolutionSelect');
 
-// 해상도 조절 함수 (기본값: 3번째 1600x900)
 function applyResolution(resKey) {
     if (resKey === 'FULL') {
         container.style.width = '100vw';
         container.style.height = '100vh';
     } else {
         const [w, h] = resKey.split('x').map(Number);
-        // 브라우저 크기보다 커지지 않도록 비율 제한
         const maxW = window.innerWidth;
         const maxH = window.innerHeight;
         
@@ -322,55 +345,75 @@ function applyResolution(resKey) {
 window.addEventListener('resize', () => applyResolution(resolutionSelect.value));
 resolutionSelect.addEventListener('change', (e) => applyResolution(e.target.value));
 
-// 초기 해상도 설정 적용 (3번째: 1600x900)
 applyResolution('1600x900');
 
-// 스크롤 및 터치 확대 방지
 window.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
 window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
-// 게임 상태
+// 게임 상태: 'IDLE', 'CASTING', 'WAITING', 'FISHING', 'RESULT'
 let gameState = 'IDLE';
 let waitTimer = 0;
 let castTimer = 0;
+let resultCooldown = 0; // 결과 확인용 입력 지연 쿨타임 (프레임 단위)
 let rodAngle = 0;
 let spacePressed = false;
 
-// 페이드아웃 변수
 let messageTimer = 0;
 const messageOverlay = document.getElementById('messageOverlay');
 
-// 잡은 물고기 목록 Map
 const caughtFishMap = new Map();
 
-// 어종 데이터
-const FISH_LIST = [
-    { name: "고등어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff" },
-    { name: "광어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff" },
-    { name: "우럭", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff" },
-    { name: "볼락", rarity: "common", rarityName: "일반", difficulty: 0.9, color: "#ffffff" },
-    
-    { name: "참돔", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6" },
-    { name: "오징어", rarity: "rare", rarityName: "희귀", difficulty: 1.2, color: "#3b82f6" },
-    { name: "감성돔", rarity: "rare", rarityName: "희귀", difficulty: 1.4, color: "#3b82f6" },
-    
-    { name: "방어", rarity: "legendary", rarityName: "전설", difficulty: 1.6, color: "#eab308" },
-    { name: "돗돔", rarity: "legendary", rarityName: "전설", difficulty: 1.8, color: "#eab308" }
-];
+// 등급별 어종 분류
+const FISH_BY_RARITY = {
+    common: [
+        { name: "고등어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff" },
+        { name: "광어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff" },
+        { name: "우럭", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff" },
+        { name: "볼락", rarity: "common", rarityName: "일반", difficulty: 0.9, color: "#ffffff" }
+    ],
+    rare: [
+        { name: "참돔", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6" },
+        { name: "오징어", rarity: "rare", rarityName: "희귀", difficulty: 1.2, color: "#3b82f6" },
+        { name: "감성돔", rarity: "rare", rarityName: "희귀", difficulty: 1.4, color: "#3b82f6" }
+    ],
+    legendary: [
+        { name: "방어", rarity: "legendary", rarityName: "전설", difficulty: 1.6, color: "#eab308" },
+        { name: "돗돔", rarity: "legendary", rarityName: "전설", difficulty: 1.8, color: "#eab308" }
+    ]
+};
 
-// 키보드 이벤트
+// 등급 확률 반영한 물고기 추첨 (일반 45%, 희귀 35%, 전설 20%)
+function getRandomFish() {
+    const rand = Math.random();
+    let rarity = 'common';
+    
+    if (rand < 0.45) {
+        rarity = 'common';
+    } else if (rand < 0.80) { // 0.45 + 0.35 = 0.80
+        rarity = 'rare';
+    } else {
+        rarity = 'legendary';
+    }
+
+    const pool = FISH_BY_RARITY[rarity];
+    return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// 키보드 입력
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'Enter') {
         if (e.code === 'Space') spacePressed = true;
         
-        if (gameState === 'IDLE' || gameState === 'RESULT') {
+        // RESULT 상태일 때는 쿨타임(1.5초)이 지난 후에만 시작 가능
+        if (gameState === 'IDLE' || (gameState === 'RESULT' && resultCooldown <= 0)) {
             startCasting();
         }
         if (e.code === 'Space') e.preventDefault();
     } else if (e.code === 'Escape') {
         if (gameState === 'WAITING' || gameState === 'CASTING') {
             gameState = 'IDLE';
-            showMessage("낚시를 취소했습니다.", "");
+            // 메세지 출력 없이 바로 초기 화면으로 전환
+            showMessage("Press SPACE or ENTER to Start Fishing!", "");
         }
     }
 });
@@ -381,7 +424,6 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
-// UI 모달 핸들러
 const notebookBtn = document.getElementById('notebookBtn');
 const settingsBtn = document.getElementById('settingsBtn');
 const notebookModal = document.getElementById('notebookModal');
@@ -451,7 +493,7 @@ function startWaiting() {
 
 function initMiniGame() {
     gameState = 'FISHING';
-    currentFish = FISH_LIST[Math.floor(Math.random() * FISH_LIST.length)];
+    currentFish = getRandomFish();
     fishPos = 20;
     fishTarget = Math.random() * 80 + 10;
     barPos = 10;
@@ -463,6 +505,11 @@ let waveOffset = 0;
 
 function update() {
     waveOffset += 0.04;
+
+    // 결과 쿨타임 카운트다운 (약 1.5초 = 90프레임)
+    if (gameState === 'RESULT' && resultCooldown > 0) {
+        resultCooldown--;
+    }
 
     // 메시지 페이드아웃 (3초~7초)
     messageTimer++;
@@ -513,27 +560,26 @@ function update() {
 
         if (catchProgress >= 100) {
             gameState = 'RESULT';
+            resultCooldown = 90; // 90프레임(약 1.5초) 동안 바로 재시작 방지
             caughtFishMap.set(currentFish.name, currentFish);
             showMessage("🎉 낚시 성공!", `✨ [${currentFish.rarityName}] ${currentFish.name}(을)를 낚았습니다!`);
         } else if (catchProgress <= 0) {
             gameState = 'RESULT';
-            showMessage("❌ 놓쳤습니다...", "다시 하려면 Space/Enter를 누르세요.");
+            resultCooldown = 90; // 90프레임(약 1.5초) 동안 바로 재시작 방지
+            showMessage("❌ 놓쳤습니다...", "잠시 후 Space/Enter를 눌러 다시 시도하세요.");
         }
     }
 }
 
 function drawPixelHatFisherman(x, y) {
-    // 배
     ctx.fillStyle = '#5c3d2e';
     ctx.fillRect(x - 40, y, 80, 20);
     ctx.fillStyle = '#3d2314';
     ctx.fillRect(x - 30, y + 20, 60, 10);
 
-    // 어부 몸통
     ctx.fillStyle = '#1e3799';
     ctx.fillRect(x - 10, y - 25, 20, 25);
 
-    // 삿갓
     ctx.fillStyle = '#f6b93b';
     ctx.beginPath();
     ctx.moveTo(x - 24, y - 22);
@@ -544,7 +590,6 @@ function drawPixelHatFisherman(x, y) {
     ctx.fillStyle = '#e67e22';
     ctx.fillRect(x - 24, y - 22, 48, 4);
 
-    // 낚싯대 회전
     const handX = x + 5;
     const handY = y - 15;
 
@@ -567,7 +612,6 @@ function drawPixelHatFisherman(x, y) {
     const globalTipX = handX + tipX * Math.cos(-rodAngle) - tipY * Math.sin(-rodAngle);
     const globalTipY = handY + tipX * Math.sin(-rodAngle) + tipY * Math.cos(-rodAngle);
 
-    // 낚싯줄
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -585,13 +629,11 @@ function drawBackground() {
     const w = canvas.width;
     const h = canvas.height;
 
-    // 수평선 비율 고정 (상단 45% 하늘/바다 경계)
     ctx.fillStyle = '#0f3057';
     ctx.fillRect(0, 0, w, h * 0.45);
     ctx.fillStyle = '#00587a';
     ctx.fillRect(0, h * 0.45, w, h * 0.55);
 
-    // 파도
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     for (let i = 0; i < w; i += 60) {
         let waveY = h * 0.47 + Math.sin(waveOffset + i) * 6;
@@ -603,19 +645,16 @@ function drawBackground() {
 
 function drawUI() {
     if (gameState === 'FISHING') {
-        // 화면 해상도에 동적으로 수응하는 하단 UI 위치 설정
         const uiWidth = Math.min(450, canvas.width * 0.7);
         const uiX = (canvas.width - uiWidth) / 2;
-        const uiY = canvas.height * 0.72; // 화면 하단에서 파묻히지 않는 최적 위치
+        const uiY = canvas.height * 0.72;
         const uiHeight = 26;
 
-        // 베이스 트랙
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(uiX - 6, uiY - 6, uiWidth + 12, uiHeight + 12);
         ctx.fillStyle = '#334155';
         ctx.fillRect(uiX, uiY, uiWidth, uiHeight);
 
-        // 게이지 바 (녹색)
         let renderBarX = uiX + (barPos / 100) * uiWidth;
         let renderBarW = (barSize / 100) * uiWidth;
         ctx.fillStyle = '#22c55e';
@@ -624,7 +663,6 @@ function drawUI() {
         ctx.lineWidth = 2;
         ctx.strokeRect(renderBarX, uiY, renderBarW, uiHeight);
 
-        // 물고기 아이콘 (등급별 색상)
         let renderFishX = uiX + (fishPos / 100) * uiWidth;
         ctx.fillStyle = currentFish.color;
         ctx.beginPath();
@@ -634,7 +672,6 @@ function drawUI() {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // 잡기 진행도 바
         ctx.fillStyle = '#1e293b';
         ctx.fillRect(uiX, uiY + uiHeight + 8, uiWidth, 7);
         ctx.fillStyle = '#eab308';
@@ -648,7 +685,6 @@ function loop() {
     update();
     drawBackground();
     
-    // 어부 위치 동적 계산 (화면 중앙 상단 바다 위)
     const boatX = canvas.width * 0.35;
     const boatY = canvas.height * 0.50 + Math.sin(waveOffset) * 4;
     drawPixelHatFisherman(boatX, boatY);
