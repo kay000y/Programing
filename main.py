@@ -7,7 +7,7 @@ st.set_page_config(
     layout="centered"
 )
 
-st.title("🎣한국 바다 낚시")
+st.title("🎣바다 낚시")
 st.caption("Enter 키 또는 Space 바를 눌러 낚시를 시작하세요! 낚시 미니게임 중에는 Space 바를 누르고 있어 게이지를 조절하세요.")
 
 game_html = """
