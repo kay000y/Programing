@@ -2,19 +2,25 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
-    page_title="Ocean Angler: Korean Seas",
+    page_title="Ocean Angler",
     page_icon="🎣",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# Streamlit 기본 여백 제거 스타일링
+# Streamlit 기본 패딩 및 스크롤바 완벽 제거
 st.markdown("""
     <style>
-        .block-container {
-            padding: 0rem !important;
+        html, body, [data-testid="stAppViewContainer"], .main, .block-container {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden !important;
         }
         footer {visibility: hidden;}
         header {visibility: hidden;}
+        [data-testid="stHeader"] {display: none;}
     </style>
 """, unsafe_allow_html=True)
 
@@ -26,21 +32,23 @@ game_html = """
 <style>
     * {
         box-sizing: border-box;
-    }
-    body, html {
         margin: 0;
         padding: 0;
+    }
+    html, body {
         width: 100%;
         height: 100%;
         overflow: hidden;
         background-color: #0f172a;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         user-select: none;
+        touch-action: none;
     }
     #gameContainer {
         position: relative;
         width: 100vw;
         height: 100vh;
+        overflow: hidden;
     }
     canvas {
         width: 100%;
@@ -52,15 +60,15 @@ game_html = """
     /* 좌측 하단 타이틀 & 설명 UI */
     #bottomLeftUI {
         position: absolute;
-        bottom: 20px;
-        left: 20px;
+        bottom: 24px;
+        left: 24px;
         color: #ffffff;
         text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
         pointer-events: none;
         z-index: 10;
     }
     #gameTitle {
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 800;
         letter-spacing: 1px;
         color: #38bdf8;
@@ -69,14 +77,14 @@ game_html = """
     #gameDesc {
         font-size: 12px;
         color: #cbd5e1;
-        max-width: 380px;
+        max-width: 420px;
         line-height: 1.4;
     }
 
     /* 알림 메시지 (페이드아웃) */
     #messageOverlay {
         position: absolute;
-        top: 25%;
+        top: 20%;
         left: 50%;
         transform: translate(-50%, -50%);
         text-align: center;
@@ -99,29 +107,31 @@ game_html = """
         text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
     }
 
-    /* 좌측 상단 노트 아이콘 */
-    #notebookBtn {
+    /* 상단 공통 버튼 스타일 (노트 & 설정) */
+    .topBtn {
         position: absolute;
         top: 20px;
-        left: 20px;
-        width: 44px;
-        height: 48px;
+        width: 52px;
+        height: 56px;
         background-color: #854d0e;
         border: 2px solid #fef08a;
-        border-radius: 6px;
+        border-radius: 8px;
         cursor: pointer;
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 24px;
+        font-size: 28px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.4);
         z-index: 20;
-        transition: transform 0.1s;
+        transition: transform 0.1s, background-color 0.1s;
     }
-    #notebookBtn:hover {
+    .topBtn:hover {
         transform: scale(1.08);
         background-color: #a16207;
     }
+
+    #notebookBtn { left: 20px; }
+    #settingsBtn { right: 20px; }
 
     /* 중앙 도감 팝업 모달 */
     #notebookModal {
@@ -130,7 +140,7 @@ game_html = """
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 360px;
+        width: 380px;
         max-height: 480px;
         background-color: #1e293b;
         border: 3px solid #38bdf8;
@@ -155,7 +165,7 @@ game_html = """
     }
     #closeBtn {
         cursor: pointer;
-        font-size: 18px;
+        font-size: 20px;
         font-weight: bold;
         color: #94a3b8;
     }
@@ -170,7 +180,7 @@ game_html = """
         overflow-y: auto;
     }
     #caughtList li {
-        padding: 8px 12px;
+        padding: 10px 14px;
         background-color: #334155;
         margin-bottom: 8px;
         border-radius: 6px;
@@ -179,6 +189,15 @@ game_html = """
         justify-content: space-between;
         align-items: center;
     }
+    .rarityTag {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .rarity-common { background-color: #94a3b8; color: #0f172a; }
+    .rarity-rare { background-color: #3b82f6; color: #ffffff; }
+    .rarity-legendary { background-color: #eab308; color: #0f172a; }
 </style>
 </head>
 <body>
@@ -186,8 +205,11 @@ game_html = """
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     
-    <!-- 좌측 상단 노트 버튼 -->
-    <div id="notebookBtn" title="Fish Logbook">📓</div>
+    <!-- 좌측 상단 노트 버튼 (크기 키움) -->
+    <div id="notebookBtn" class="topBtn" title="Fish Logbook">📓</div>
+
+    <!-- 우측 상단 설정 버튼 -->
+    <div id="settingsBtn" class="topBtn" title="Settings">⚙️</div>
 
     <!-- 중앙 도감 팝업 -->
     <div id="notebookModal">
@@ -200,7 +222,7 @@ game_html = """
         </ul>
     </div>
 
-    <!-- 중앙 상단 알림 메시지 (페이드아웃 대상) -->
+    <!-- 중앙 상단 알림 메시지 -->
     <div id="messageOverlay">
         <div id="statusText">Press SPACE or ENTER to Start Fishing!</div>
         <div id="caughtInfo"></div>
@@ -208,9 +230,9 @@ game_html = """
 
     <!-- 좌측 하단 타이틀 & 설명 -->
     <div id="bottomLeftUI">
-        <div id="gameTitle">OCEAN ANGLER: KOREAN SEAS</div>
+        <div id="gameTitle">OCEAN ANGLER</div>
         <div id="gameDesc">
-            [Space/Enter] 낚시 시작 | [Space] 꾹 눌러 게이지 오른쪽 이동 / 떼면 왼쪽 이동
+            [Space/Enter] 낚시 시작 | [Space] 꾹 눌러 게이지 유지 | [ESC] 대기 중 낚시 취소
         </div>
     </div>
 </div>
@@ -226,17 +248,39 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// 게임 상태: 'IDLE', 'WAITING', 'FISHING', 'RESULT'
+// 스크롤 및 확대/축소 방지 이벤트
+window.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
+window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+// 게임 상태: 'IDLE', 'CASTING', 'WAITING', 'FISHING', 'RESULT'
 let gameState = 'IDLE';
 let waitTimer = 0;
+let castTimer = 0;
+let rodAngle = 0; // 낚싯대 애니메이션 각도 (라디안)
 let spacePressed = false;
 
-// 페이드아웃 관련 변수
-let messageTimer = 0; // 프레임 단위 (60fps)
+// 페이드아웃 변수
+let messageTimer = 0;
 const messageOverlay = document.getElementById('messageOverlay');
 
-// 잡은 물고기 기록 목록 (중복 제거용 Set)
-const caughtFishSet = new Set();
+// 잡은 물고기 목록 Map
+const caughtFishMap = new Map();
+
+// 어종 및 등급 데이터
+// 등급: 'common' (흰색, 1.0x), 'rare' (파랑, 1.25x), 'legendary' (노랑, 1.5x)
+const FISH_LIST = [
+    { name: "고등어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff" },
+    { name: "광어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff" },
+    { name: "우럭", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff" },
+    { name: "볼락", rarity: "common", rarityName: "일반", difficulty: 0.9, color: "#ffffff" },
+    
+    { name: "참돔", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6" },
+    { name: "오징어", rarity: "rare", rarityName: "희귀", difficulty: 1.2, color: "#3b82f6" },
+    { name: "감성돔", rarity: "rare", rarityName: "희귀", difficulty: 1.4, color: "#3b82f6" },
+    
+    { name: "방어", rarity: "legendary", rarityName: "전설", difficulty: 1.6, color: "#eab308" },
+    { name: "돗돔", rarity: "legendary", rarityName: "전설", difficulty: 1.8, color: "#eab308" }
+];
 
 // 입력 처리
 window.addEventListener('keydown', (e) => {
@@ -244,9 +288,15 @@ window.addEventListener('keydown', (e) => {
         if (e.code === 'Space') spacePressed = true;
         
         if (gameState === 'IDLE' || gameState === 'RESULT') {
-            startFishing();
+            startCasting();
         }
         if (e.code === 'Space') e.preventDefault();
+    } else if (e.code === 'Escape') {
+        // 찌를 물기 전(WAITING, CASTING) 상태일 때만 취소 가능
+        if (gameState === 'WAITING' || gameState === 'CASTING') {
+            gameState = 'IDLE';
+            showMessage("낚시를 취소했습니다.", "");
+        }
     }
 });
 
@@ -256,7 +306,7 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
-// 노트 팝업 열기/닫기
+// UI 모달 핸들러
 const notebookBtn = document.getElementById('notebookBtn');
 const notebookModal = document.getElementById('notebookModal');
 const closeBtn = document.getElementById('closeBtn');
@@ -274,29 +324,20 @@ function updateNotebookUI() {
     const listEl = document.getElementById('caughtList');
     listEl.innerHTML = '';
     
-    if (caughtFishSet.size === 0) {
+    if (caughtFishMap.size === 0) {
         listEl.innerHTML = '<li style="color: #94a3b8; justify-content: center;">아직 잡은 물고기가 없습니다.</li>';
         return;
     }
 
-    caughtFishSet.forEach(fishName => {
+    caughtFishMap.forEach((data, fishName) => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>🐟 ${fishName}</span><span style="color:#38bdf8; font-size:12px;">Caught</span>`;
+        li.innerHTML = `
+            <span>🐟 ${fishName}</span>
+            <span class="rarityTag rarity-${data.rarity}">${data.rarityName}</span>
+        `;
         listEl.appendChild(li);
     });
 }
-
-// 한국 해양 어종 데이터
-const FISH_LIST = [
-    { name: "고등어", difficulty: 1.2, color: "#48dbfb" },
-    { name: "광어", difficulty: 1.0, color: "#c8d6e5" },
-    { name: "우럭", difficulty: 1.1, color: "#8395a7" },
-    { name: "참돔", difficulty: 1.8, color: "#ff9ff3" },
-    { name: "감성돔", difficulty: 2.0, color: "#54a0ff" },
-    { name: "방어", difficulty: 2.2, color: "#feca57" },
-    { name: "오징어", difficulty: 1.5, color: "#ff6b6b" },
-    { name: "볼락", difficulty: 0.9, color: "#ff9f43" }
-];
 
 let currentFish = null;
 let fishPos = 50;
@@ -309,13 +350,20 @@ function showMessage(status, caught = "") {
     document.getElementById('statusText').innerText = status;
     document.getElementById('caughtInfo').innerText = caught;
     messageOverlay.style.opacity = '1';
-    messageTimer = 0; // 타이머 리셋
+    messageTimer = 0;
 }
 
-function startFishing() {
+function startCasting() {
+    gameState = 'CASTING';
+    castTimer = 0;
+    rodAngle = 0;
+    showMessage("낚싯대를 던집니다!", "");
+}
+
+function startWaiting() {
     gameState = 'WAITING';
     waitTimer = 300; // 약 5초
-    showMessage("낚싯대를 던졌습니다... 기다리는 중...", "");
+    showMessage("기다리는 중... (ESC로 취소 가능)", "");
 }
 
 function initMiniGame() {
@@ -325,7 +373,7 @@ function initMiniGame() {
     fishTarget = Math.random() * 80 + 10;
     barPos = 10;
     catchProgress = 30;
-    showMessage(`신호가 왔다! [${currentFish.name}]`, "Space 바를 연타하거나 눌러 게이지를 조절하세요!");
+    showMessage(`신호가 왔다! [${currentFish.rarityName}] 등급 물고기!`, "Space 바를 눌러 게이지를 맞추세요!");
 }
 
 let waveOffset = 0;
@@ -333,8 +381,7 @@ let waveOffset = 0;
 function update() {
     waveOffset += 0.04;
 
-    // 페이드아웃 로직 (3초 후 투명해지기 시작 ~ 7초 후 완전 소멸)
-    // 60fps 기준: 3초 = 180프레임, 7초 = 420프레임
+    // 메시지 페이드아웃 (3초 ~ 7초)
     messageTimer++;
     if (messageTimer > 180) {
         if (messageTimer >= 420) {
@@ -345,7 +392,17 @@ function update() {
         }
     }
 
-    if (gameState === 'WAITING') {
+    // 낚싯대 던지기 모션 (위로 90도 들었다가 내려놓음)
+    if (gameState === 'CASTING') {
+        castTimer += 0.08;
+        // sin 함수를 활용해 0 -> 90도 -> 0도 왕복
+        rodAngle = Math.sin(castTimer) * (Math.PI / 2);
+        
+        if (castTimer >= Math.PI) {
+            rodAngle = 0;
+            startWaiting();
+        }
+    } else if (gameState === 'WAITING') {
         waitTimer--;
         if (waitTimer <= 0) {
             initMiniGame();
@@ -363,6 +420,8 @@ function update() {
         if (Math.random() < 0.03) {
             fishTarget = Math.random() * 80 + 10;
         }
+        
+        // 등급별 속도 차이 적용 (difficulty 반영)
         fishPos += (fishTarget - fishPos) * (0.02 * currentFish.difficulty);
 
         let barEnd = barPos + barSize;
@@ -374,8 +433,8 @@ function update() {
 
         if (catchProgress >= 100) {
             gameState = 'RESULT';
-            caughtFishSet.add(currentFish.name);
-            showMessage("🎉 낚시 성공!", `✨ [${currentFish.name}] (을)를 낚았습니다!`);
+            caughtFishMap.set(currentFish.name, currentFish);
+            showMessage("🎉 낚시 성공!", `✨ [${currentFish.rarityName}] ${currentFish.name}(을)를 낚았습니다!`);
         } else if (catchProgress <= 0) {
             gameState = 'RESULT';
             showMessage("❌ 놓쳤습니다...", "다시 하려면 Space/Enter를 누르세요.");
@@ -394,7 +453,7 @@ function drawPixelHatFisherman(x, y) {
     ctx.fillStyle = '#1e3799';
     ctx.fillRect(x - 10, y - 25, 20, 25);
 
-    // 삿갓 (얼굴 전체 가림)
+    // 삿갓
     ctx.fillStyle = '#f6b93b';
     ctx.beginPath();
     ctx.moveTo(x - 24, y - 22);
@@ -405,24 +464,42 @@ function drawPixelHatFisherman(x, y) {
     ctx.fillStyle = '#e67e22';
     ctx.fillRect(x - 24, y - 22, 48, 4);
 
-    // 낚싯대
+    // 낚싯대 회전 조작 (어부의 손 위치 기준 회전)
+    const handX = x + 5;
+    const handY = y - 15;
+
+    ctx.save();
+    ctx.translate(handX, handY);
+    ctx.rotate(-rodAngle); // 위쪽 방향으로 회전
+
+    // 낚싯대 그리기 (원점 기준)
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(x + 5, y - 15);
-    ctx.lineTo(x + 60, y - 60);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(55, -45);
     ctx.stroke();
+
+    // 낚싯대 끝의 로컬 좌표를 구해서 낚싯줄 그리기
+    const tipX = 55;
+    const tipY = -45;
+
+    ctx.restore();
+
+    // 회전이 반영된 낚싯대 끝 글로벌 위치 계산
+    const globalTipX = handX + tipX * Math.cos(-rodAngle) - tipY * Math.sin(-rodAngle);
+    const globalTipY = handY + tipX * Math.sin(-rodAngle) + tipY * Math.cos(-rodAngle);
 
     // 낚싯줄
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(x + 60, y - 60);
+    ctx.moveTo(globalTipX, globalTipY);
     
     if (gameState === 'WAITING' || gameState === 'FISHING') {
         ctx.lineTo(x + 180, y + 40);
     } else {
-        ctx.lineTo(x + 60, y + 20);
+        ctx.lineTo(globalTipX, globalTipY + 30);
     }
     ctx.stroke();
 }
@@ -433,25 +510,25 @@ function drawBackground() {
 
     // 바다 배경
     ctx.fillStyle = '#0f3057';
-    ctx.fillRect(0, 0, w, h * 0.4);
+    ctx.fillRect(0, 0, w, h * 0.45);
     ctx.fillStyle = '#00587a';
-    ctx.fillRect(0, h * 0.4, w, h * 0.6);
+    ctx.fillRect(0, h * 0.45, w, h * 0.55);
 
     // 파도
     ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
     for (let i = 0; i < w; i += 60) {
-        let waveY = h * 0.42 + Math.sin(waveOffset + i) * 6;
+        let waveY = h * 0.47 + Math.sin(waveOffset + i) * 6;
         ctx.fillRect(i, waveY, 35, 4);
-        let waveY2 = h * 0.7 + Math.cos(waveOffset + i) * 10;
+        let waveY2 = h * 0.72 + Math.cos(waveOffset + i) * 10;
         ctx.fillRect(i + 20, waveY2, 45, 4);
     }
 }
 
 function drawUI() {
     if (gameState === 'FISHING') {
-        const uiWidth = Math.min(400, canvas.width * 0.6);
+        const uiWidth = Math.min(450, canvas.width * 0.6);
         const uiX = (canvas.width - uiWidth) / 2;
-        const uiY = canvas.height * 0.75;
+        const uiY = canvas.height * 0.8;
         const uiHeight = 28;
 
         // 베이스 트랙
@@ -460,7 +537,7 @@ function drawUI() {
         ctx.fillStyle = '#334155';
         ctx.fillRect(uiX, uiY, uiWidth, uiHeight);
 
-        // 게이지 바
+        // 게이지 바 (플레이어 바)
         let renderBarX = uiX + (barPos / 100) * uiWidth;
         let renderBarW = (barSize / 100) * uiWidth;
         ctx.fillStyle = '#22c55e';
@@ -469,13 +546,13 @@ function drawUI() {
         ctx.lineWidth = 2;
         ctx.strokeRect(renderBarX, uiY, renderBarW, uiHeight);
 
-        // 물고기 아이콘
+        // 물고기 아이콘 (등급에 맞춰 색상 적용: 흰색, 파랑, 노랑)
         let renderFishX = uiX + (fishPos / 100) * uiWidth;
         ctx.fillStyle = currentFish.color;
         ctx.beginPath();
         ctx.arc(renderFishX, uiY + uiHeight / 2, 10, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = '#0f172a';
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -493,9 +570,8 @@ function loop() {
     update();
     drawBackground();
     
-    // 화면 중앙 부근에 배와 어부 배치
     const boatX = canvas.width * 0.35;
-    const boatY = canvas.height * 0.52 + Math.sin(waveOffset) * 5;
+    const boatY = canvas.height * 0.55 + Math.sin(waveOffset) * 5;
     drawPixelHatFisherman(boatX, boatY);
     
     drawUI();
@@ -509,4 +585,5 @@ loop();
 </html>
 """
 
-components.html(game_html, height=800, scrolling=False)
+# 화면 전체 크기로 구성 요소 렌더링
+components.html(game_html, height=1000, scrolling=False)
