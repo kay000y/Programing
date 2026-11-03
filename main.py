@@ -83,7 +83,7 @@ game_html = """
     #gameDesc {
         font-size: 11px;
         color: #cbd5e1;
-        max-width: 420px;
+        max-width: 440px;
         line-height: 1.4;
     }
 
@@ -113,7 +113,7 @@ game_html = """
         text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
     }
 
-    /* 버튼 공통 스타일 */
+    /* 상단 좌측 버튼 및 UI 배치 */
     .topBtn {
         position: absolute;
         width: 48px;
@@ -136,22 +136,49 @@ game_html = """
     }
 
     #notebookBtn { top: 20px; left: 20px; }
-    #shopBtn { top: 82px; left: 20px; } /* 노트 바로 아래 */
+    #shopBtn { top: 82px; left: 20px; }
+    #inventoryBtn { top: 144px; left: 20px; }
     #settingsBtn { top: 20px; right: 20px; }
 
-    /* 돈 표시 직사각형 UI */
+    /* 장착 낚싯대 소형 퀵 뷰 버튼 (가방 옆) */
+    #equippedRodQuickBtn {
+        position: absolute;
+        top: 150px;
+        left: 76px;
+        height: 40px;
+        padding: 0 10px;
+        background-color: #1e293b;
+        border: 2px solid #cbd5e1;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: bold;
+        color: #f8fafc;
+        cursor: pointer;
+        z-index: 20;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    #equippedRodQuickBtn:hover {
+        border-color: #38bdf8;
+        background-color: #334155;
+    }
+
+    /* 돈 표시 바 (이모지 제거, 간결한 $ 표기) */
     #moneyBar {
         position: absolute;
         top: 20px;
         left: 78px;
         height: 52px;
-        min-width: 150px;
+        min-width: 140px;
         background-color: #1e293b;
         border: 2px solid #eab308;
         border-radius: 8px;
         display: flex;
         align-items: center;
-        padding: 0 14px;
+        justify-content: center;
+        padding: 0 16px;
         color: #fde047;
         font-weight: 800;
         font-size: 18px;
@@ -159,6 +186,7 @@ game_html = """
         z-index: 20;
     }
 
+    /* 모달 공통 레이아웃 */
     .modal {
         display: none;
         position: absolute;
@@ -197,6 +225,7 @@ game_html = """
         color: #ffffff;
     }
 
+    /* 도감 확률 헤더 */
     #rarityRateBox {
         background-color: #0f172a;
         border: 1px solid #334155;
@@ -208,21 +237,40 @@ game_html = """
         justify-content: space-around;
         text-align: center;
     }
-    .rateItem {
+
+    /* 가방 내 탭 스타일 */
+    .tabContainer {
         display: flex;
-        flex-direction: column;
-        gap: 2px;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    .tabBtn {
+        flex: 1;
+        padding: 8px;
+        background-color: #0f172a;
+        border: 1px solid #334155;
+        color: #cbd5e1;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 13px;
+        cursor: pointer;
+        text-align: center;
+    }
+    .tabBtn.active {
+        background-color: #38bdf8;
+        color: #0f172a;
+        border-color: #38bdf8;
     }
 
     .itemList {
         list-style: none;
         padding: 0;
         margin: 0;
-        max-height: 250px;
+        max-height: 240px;
         overflow-y: auto;
     }
     .itemList li {
-        padding: 8px 12px;
+        padding: 10px 14px;
         background-color: #334155;
         margin-bottom: 8px;
         border-radius: 6px;
@@ -231,6 +279,7 @@ game_html = """
         justify-content: space-between;
         align-items: center;
     }
+
     .rarityTag {
         font-size: 11px;
         padding: 2px 6px;
@@ -241,18 +290,12 @@ game_html = """
     .rarity-rare { background-color: #3b82f6; color: #ffffff; }
     .rarity-legendary { background-color: #eab308; color: #0f172a; }
 
-    /* 상점 탭 & 버튼 스타일 */
-    .shopSectionTitle {
-        font-size: 13px;
-        font-weight: bold;
-        color: #cbd5e1;
-        margin: 12px 0 6px 0;
-    }
+    /* 버튼 컨트롤 */
     .actionBtn {
         background-color: #10b981;
         color: white;
         border: none;
-        padding: 4px 10px;
+        padding: 5px 12px;
         border-radius: 4px;
         font-size: 12px;
         font-weight: bold;
@@ -261,6 +304,11 @@ game_html = """
     }
     .actionBtn:hover { background-color: #059669; }
     .actionBtn:disabled { background-color: #64748b; cursor: not-allowed; }
+
+    .equipBtn {
+        background-color: #3b82f6;
+    }
+    .equipBtn:hover { background-color: #2563eb; }
 
     .sellAllBtn {
         width: 100%;
@@ -273,7 +321,6 @@ game_html = """
         font-weight: bold;
         cursor: pointer;
         margin-top: 6px;
-        margin-bottom: 12px;
     }
     .sellAllBtn:hover { background-color: #dc2626; }
 
@@ -304,42 +351,42 @@ game_html = """
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     
-    <!-- 좌측 상단 버튼 및 돈 UI -->
-    <div id="notebookBtn" class="topBtn" title="Fish Logbook">📓</div>
-    <div id="shopBtn" class="topBtn" title="Shop">✉️</div>
-    <div id="moneyBar">💰 <span id="moneyText" style="margin-left: 6px;">0</span> $</div>
+    <!-- 좌측 상단 버튼들 -->
+    <div id="notebookBtn" class="topBtn" title="Fish Logbook (노트)">📓</div>
+    <div id="shopBtn" class="topBtn" title="Ocean Shop (상점)">🏪</div>
+    <div id="inventoryBtn" class="topBtn" title="Inventory (가방)">🎒</div>
+    
+    <!-- 장착 낚싯대 소형 퀵 뷰 -->
+    <div id="equippedRodQuickBtn" title="Current Equipped Rod">
+        <span>🎣</span>
+        <span id="quickRodName">나무 낚싯대</span>
+    </div>
+
+    <!-- 간결한 돈 표시 UI -->
+    <div id="moneyBar"><span id="moneyText">0</span> &nbsp;$</div>
 
     <!-- 우측 상단 설정 버튼 -->
     <div id="settingsBtn" class="topBtn" title="Settings">⚙️</div>
 
-    <!-- 도감 팝업 -->
+    <!-- 1. 도감(노트) 팝업 (잡은 어종 기록 저장소) -->
     <div id="notebookModal" class="modal">
         <div class="modalHeader">
-            <span class="modalTitle">📖 Caught Fish Log</span>
+            <span class="modalTitle">📖 Fish Logbook</span>
             <span id="closeNotebook" class="closeBtn">&times;</span>
         </div>
         
         <div id="rarityRateBox">
-            <div class="rateItem">
-                <span class="rarityTag rarity-common">일반 (10$)</span>
-                <span style="color: #cbd5e1;">45%</span>
-            </div>
-            <div class="rateItem">
-                <span class="rarityTag rarity-rare">희귀 (50$)</span>
-                <span style="color: #cbd5e1;">35%</span>
-            </div>
-            <div class="rateItem">
-                <span class="rarityTag rarity-legendary">전설 (100$)</span>
-                <span style="color: #cbd5e1;">20%</span>
-            </div>
+            <div><span class="rarityTag rarity-common">일반 (10$)</span> <span style="color:#cbd5e1;">45%</span></div>
+            <div><span class="rarityTag rarity-rare">희귀 (50$)</span> <span style="color:#cbd5e1;">35%</span></div>
+            <div><span class="rarityTag rarity-legendary">전설 (100$)</span> <span style="color:#cbd5e1;">20%</span></div>
         </div>
 
-        <ul id="caughtList" class="itemList">
-            <li style="color: #94a3b8; justify-content: center;">아직 잡은 물고기가 없습니다.</li>
+        <ul id="logbookList" class="itemList">
+            <li style="color: #94a3b8; justify-content: center;">도감에 기록된 물고기가 없습니다.</li>
         </ul>
     </div>
 
-    <!-- 상점 팝업 -->
+    <!-- 2. 상점 팝업 (물고기 판매 & 낚싯대 종렬 구매) -->
     <div id="shopModal" class="modal">
         <div class="modalHeader">
             <span class="modalTitle">🏪 Ocean Shop</span>
@@ -347,20 +394,51 @@ game_html = """
         </div>
 
         <!-- 물고기 판매 섹션 -->
-        <div class="shopSectionTitle">🐟 Sell Fish [E: 맨 위 물고기 판매 | Shift+E: 전체 판매]</div>
-        <ul id="shopFishList" class="itemList" style="max-height: 140px;">
+        <div style="font-size: 13px; font-weight: bold; color: #cbd5e1; margin-bottom: 6px;">
+            🐟 Sell Fish [E: 위 물고기 | Shift+E: 전체]
+        </div>
+        <ul id="shopFishList" class="itemList" style="max-height: 120px;">
             <li style="color: #94a3b8; justify-content: center;">보유 중인 물고기가 없습니다.</li>
         </ul>
         <button id="sellAllBtn" class="sellAllBtn">Sell All Fish (Shift + E)</button>
 
-        <!-- 낚싯대 구매 섹션 -->
-        <div class="shopSectionTitle" style="border-top: 1px solid #334155; padding-top: 10px;">🎣 Fishing Rods</div>
-        <ul id="rodList" class="itemList" style="max-height: 140px;">
-            <!-- JavaScript에서 생성 -->
+        <!-- 낚싯대 구매 섹션 (종렬 정렬) -->
+        <div style="font-size: 13px; font-weight: bold; color: #cbd5e1; margin: 12px 0 6px 0; border-top: 1px solid #334155; padding-top: 10px;">
+            🎣 Fishing Rods
+        </div>
+        <ul id="rodShopList" class="itemList" style="max-height: 140px;">
+            <!-- JS에서 종렬 배치 -->
         </ul>
     </div>
 
-    <!-- 설정 팝업 -->
+    <!-- 3. 아이템 가방(인벤토리) 팝업 -->
+    <div id="inventoryModal" class="modal">
+        <div class="modalHeader">
+            <span class="modalTitle">🎒 Inventory</span>
+            <span id="closeInventory" class="closeBtn">&times;</span>
+        </div>
+
+        <div class="tabContainer">
+            <div id="tabFishBtn" class="tabBtn active">🐟 Fish Bag</div>
+            <div id="tabEquipBtn" class="tabBtn">🎣 Equipment</div>
+        </div>
+
+        <!-- 물고기 가방 탭 -->
+        <div id="tabFishContent">
+            <ul id="invFishList" class="itemList">
+                <li style="color: #94a3b8; justify-content: center;">가방에 물고기가 없습니다.</li>
+            </ul>
+        </div>
+
+        <!-- 장비 탭 (낚싯대 교체) -->
+        <div id="tabEquipContent" style="display: none;">
+            <ul id="invRodList" class="itemList">
+                <!-- JS 생성 -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- 4. 설정 팝업 -->
     <div id="settingsModal" class="modal">
         <div class="modalHeader">
             <span class="modalTitle">⚙️ Settings</span>
@@ -378,15 +456,17 @@ game_html = """
         </div>
     </div>
 
+    <!-- 상단 중앙 상태 메시지 -->
     <div id="messageOverlay">
         <div id="statusText">Press SPACE or ENTER to Start Fishing!</div>
         <div id="caughtInfo"></div>
     </div>
 
+    <!-- 좌측 하단 조작 설명 -->
     <div id="bottomLeftUI">
         <div id="gameTitle">OCEAN ANGLER</div>
         <div id="gameDesc">
-            [Space/Enter] 낚시 시작 | [Space] 게이지 유지 | [ESC] 취소 | [E] 위 물고기 판매 | [Shift+E] 전체 판매
+            [Space/Enter] 낚시 시작 | [Space] 게이지 유지 | [ESC] 취소 | [E] 맨 위 물고기 판매 | [Shift+E] 전체 판매
         </div>
     </div>
 </div>
@@ -431,10 +511,17 @@ applyResolution('1600x900');
 window.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
 window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
-// 게임 경제 및 인벤토리 변수
+// 게임 경제 및 세분화 데이터
 let playerMoney = 0;
-let inventory = []; // 잡은 물고기 목록 [{ id, name, rarity, rarityName, price }]
+
+// 1. 도감(노트): 잡은 종류 영구 기록 (어종명 Set)
+const caughtSpeciesSet = new Map(); // name -> { name, rarity, rarityName }
+
+// 2. 가방(인벤토리): 소지 중인 미판매 물고기 배열
+let inventoryFish = [];
 let nextFishId = 1;
+
+// 3. 낚싯대 데이터
 let equippedRodId = "wood";
 
 const RODS = [
@@ -448,32 +535,39 @@ function updateMoneyUI() {
     document.getElementById('moneyText').innerText = playerMoney.toLocaleString();
 }
 
+function updateEquippedRodUI() {
+    const rod = RODS.find(r => r.id === equippedRodId);
+    if (rod) {
+        document.getElementById('quickRodName').innerText = rod.name;
+    }
+}
+
 function sellFish(index) {
-    if (index >= 0 && index < inventory.length) {
-        const item = inventory[index];
+    if (index >= 0 && index < inventoryFish.length) {
+        const item = inventoryFish[index];
         playerMoney += item.price;
-        inventory.splice(index, 1);
+        inventoryFish.splice(index, 1);
         updateMoneyUI();
         updateShopUI();
-        updateNotebookUI();
+        updateInventoryUI();
     }
 }
 
 function sellTopFish() {
-    if (inventory.length > 0) {
+    if (inventoryFish.length > 0) {
         sellFish(0);
     }
 }
 
 function sellAllFish() {
-    if (inventory.length > 0) {
+    if (inventoryFish.length > 0) {
         let total = 0;
-        inventory.forEach(item => total += item.price);
+        inventoryFish.forEach(item => total += item.price);
         playerMoney += total;
-        inventory = [];
+        inventoryFish = [];
         updateMoneyUI();
         updateShopUI();
-        updateNotebookUI();
+        updateInventoryUI();
     }
 }
 
@@ -484,11 +578,23 @@ function buyRod(rodId) {
         rod.bought = true;
         equippedRodId = rod.id;
         updateMoneyUI();
+        updateEquippedRodUI();
         updateShopUI();
+        updateInventoryUI();
     }
 }
 
-// 게임 상태
+function equipRod(rodId) {
+    const rod = RODS.find(r => r.id === rodId);
+    if (rod && rod.bought) {
+        equippedRodId = rod.id;
+        updateEquippedRodUI();
+        updateShopUI();
+        updateInventoryUI();
+    }
+}
+
+// 게임 내부 로직
 let gameState = 'IDLE';
 let waitTimer = 0;
 let castTimer = 0;
@@ -533,9 +639,8 @@ function getRandomFish() {
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// 키보드 입력
+// 키보드 조작
 window.addEventListener('keydown', (e) => {
-    // E 및 Shift+E 단축키 처리 (물고기 판매)
     if (e.code === 'KeyE') {
         if (e.shiftKey) {
             sellAllFish();
@@ -566,58 +671,104 @@ window.addEventListener('keyup', (e) => {
     }
 });
 
-// UI 모달 연결
+// UI 모달 컨트롤
 const notebookBtn = document.getElementById('notebookBtn');
 const shopBtn = document.getElementById('shopBtn');
+const inventoryBtn = document.getElementById('inventoryBtn');
 const settingsBtn = document.getElementById('settingsBtn');
+const equippedRodQuickBtn = document.getElementById('equippedRodQuickBtn');
 
 const notebookModal = document.getElementById('notebookModal');
 const shopModal = document.getElementById('shopModal');
+const inventoryModal = document.getElementById('inventoryModal');
 const settingsModal = document.getElementById('settingsModal');
 
 const closeNotebook = document.getElementById('closeNotebook');
 const closeShop = document.getElementById('closeShop');
+const closeInventory = document.getElementById('closeInventory');
 const closeSettings = document.getElementById('closeSettings');
 const sellAllBtn = document.getElementById('sellAllBtn');
 
+function hideAllModals() {
+    notebookModal.style.display = 'none';
+    shopModal.style.display = 'none';
+    inventoryModal.style.display = 'none';
+    settingsModal.style.display = 'none';
+}
+
 notebookBtn.addEventListener('click', () => {
+    hideAllModals();
     updateNotebookUI();
     notebookModal.style.display = 'block';
-    shopModal.style.display = 'none';
-    settingsModal.style.display = 'none';
 });
 
 shopBtn.addEventListener('click', () => {
+    hideAllModals();
     updateShopUI();
     shopModal.style.display = 'block';
-    notebookModal.style.display = 'none';
-    settingsModal.style.display = 'none';
+});
+
+inventoryBtn.addEventListener('click', () => {
+    hideAllModals();
+    updateInventoryUI();
+    inventoryModal.style.display = 'block';
+});
+
+equippedRodQuickBtn.addEventListener('click', () => {
+    hideAllModals();
+    switchTab('equip');
+    updateInventoryUI();
+    inventoryModal.style.display = 'block';
 });
 
 settingsBtn.addEventListener('click', () => {
+    hideAllModals();
     settingsModal.style.display = 'block';
-    notebookModal.style.display = 'none';
-    shopModal.style.display = 'none';
 });
 
-closeNotebook.addEventListener('click', () => notebookModal.style.display = 'none');
-closeShop.addEventListener('click', () => shopModal.style.display = 'none');
-closeSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+closeNotebook.addEventListener('click', hideAllModals);
+closeShop.addEventListener('click', hideAllModals);
+closeInventory.addEventListener('click', hideAllModals);
+closeSettings.addEventListener('click', hideAllModals);
 sellAllBtn.addEventListener('click', sellAllFish);
 
+// 가방 모달 내부 탭 전환
+const tabFishBtn = document.getElementById('tabFishBtn');
+const tabEquipBtn = document.getElementById('tabEquipBtn');
+const tabFishContent = document.getElementById('tabFishContent');
+const tabEquipContent = document.getElementById('tabEquipContent');
+
+function switchTab(tab) {
+    if (tab === 'fish') {
+        tabFishBtn.classList.add('active');
+        tabEquipBtn.classList.remove('active');
+        tabFishContent.style.display = 'block';
+        tabEquipContent.style.display = 'none';
+    } else {
+        tabEquipBtn.classList.add('active');
+        tabFishBtn.classList.remove('active');
+        tabEquipContent.style.display = 'block';
+        tabFishContent.style.display = 'none';
+    }
+}
+
+tabFishBtn.addEventListener('click', () => switchTab('fish'));
+tabEquipBtn.addEventListener('click', () => switchTab('equip'));
+
+// UI 업데이트 함수들
 function updateNotebookUI() {
-    const listEl = document.getElementById('caughtList');
+    const listEl = document.getElementById('logbookList');
     listEl.innerHTML = '';
     
-    if (inventory.length === 0) {
-        listEl.innerHTML = '<li style="color: #94a3b8; justify-content: center;">아직 잡은 물고기가 없습니다.</li>';
+    if (caughtSpeciesSet.size === 0) {
+        listEl.innerHTML = '<li style="color: #94a3b8; justify-content: center;">도감에 기록된 물고기가 없습니다.</li>';
         return;
     }
 
-    inventory.forEach((item) => {
+    caughtSpeciesSet.forEach((item) => {
         const li = document.createElement('li');
         li.innerHTML = `
-            <span>🐟 ${item.name} (${item.price}$)</span>
+            <span>📖 ${item.name}</span>
             <span class="rarityTag rarity-${item.rarity}">${item.rarityName}</span>
         `;
         listEl.appendChild(li);
@@ -625,14 +776,14 @@ function updateNotebookUI() {
 }
 
 function updateShopUI() {
-    // 1. 물고기 판매 목록
+    // 1. 판매 물고기
     const shopListEl = document.getElementById('shopFishList');
     shopListEl.innerHTML = '';
 
-    if (inventory.length === 0) {
+    if (inventoryFish.length === 0) {
         shopListEl.innerHTML = '<li style="color: #94a3b8; justify-content: center;">보유 중인 물고기가 없습니다.</li>';
     } else {
-        inventory.forEach((item, idx) => {
+        inventoryFish.forEach((item, idx) => {
             const li = document.createElement('li');
             li.innerHTML = `
                 <span>🐟 ${item.name} (${item.price}$)</span>
@@ -642,8 +793,8 @@ function updateShopUI() {
         });
     }
 
-    // 2. 낚싯대 구매 목록
-    const rodListEl = document.getElementById('rodList');
+    // 2. 낚싯대 종렬 구매 목록
+    const rodListEl = document.getElementById('rodShopList');
     rodListEl.innerHTML = '';
 
     RODS.forEach((rod) => {
@@ -661,6 +812,43 @@ function updateShopUI() {
             ${btnHtml}
         `;
         rodListEl.appendChild(li);
+    });
+}
+
+function updateInventoryUI() {
+    // 1. 가방 내 물고기 목록
+    const invFishListEl = document.getElementById('invFishList');
+    invFishListEl.innerHTML = '';
+
+    if (inventoryFish.length === 0) {
+        invFishListEl.innerHTML = '<li style="color: #94a3b8; justify-content: center;">가방에 물고기가 없습니다.</li>';
+    } else {
+        inventoryFish.forEach((item) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>🐟 ${item.name} (${item.price}$)</span>
+                <span class="rarityTag rarity-${item.rarity}">${item.rarityName}</span>
+            `;
+            invFishListEl.appendChild(li);
+        });
+    }
+
+    // 2. 가방 내 낚싯대 장비 목록
+    const invRodListEl = document.getElementById('invRodList');
+    invRodListEl.innerHTML = '';
+
+    RODS.filter(r => r.bought).forEach((rod) => {
+        const li = document.createElement('li');
+        const isEquipped = rod.id === equippedRodId;
+        const btnHtml = isEquipped 
+            ? `<span style="color: #38bdf8; font-weight: bold; font-size: 12px;">Equipped</span>`
+            : `<button class="actionBtn equipBtn" onclick="equipRod('${rod.id}')">Equip</button>`;
+
+        li.innerHTML = `
+            <span>🎣 ${rod.name}</span>
+            ${btnHtml}
+        `;
+        invRodListEl.appendChild(li);
     });
 }
 
@@ -760,8 +948,15 @@ function update() {
             gameState = 'RESULT';
             resultCooldown = 90;
             
-            // 인벤토리에 추가
-            inventory.unshift({
+            // 1. 도감 기록 (영구 보존)
+            caughtSpeciesSet.set(currentFish.name, {
+                name: currentFish.name,
+                rarity: currentFish.rarity,
+                rarityName: currentFish.rarityName
+            });
+
+            // 2. 가방 인벤토리에 추가 (판매 시 차감됨)
+            inventoryFish.unshift({
                 id: nextFishId++,
                 name: currentFish.name,
                 rarity: currentFish.rarity,
@@ -804,7 +999,13 @@ function drawPixelHatFisherman(x, y) {
     ctx.translate(handX, handY);
     ctx.rotate(-rodAngle);
 
-    ctx.strokeStyle = '#cbd5e1';
+    // 장착된 낚싯대에 따른 렌더링 색상 변경
+    let rodColor = '#cbd5e1'; // 기본 나무/일반
+    if (equippedRodId === 'stone') rodColor = '#94a3b8';
+    else if (equippedRodId === 'iron') rodColor = '#38bdf8';
+    else if (equippedRodId === 'gold') rodColor = '#eab308';
+
+    ctx.strokeStyle = rodColor;
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(0, 0);
@@ -900,6 +1101,10 @@ function loop() {
 
     requestAnimationFrame(loop);
 }
+
+// 초기 UI 바인딩
+updateMoneyUI();
+updateEquippedRodUI();
 
 loop();
 </script>
