@@ -83,7 +83,7 @@ game_html = """
     #gameDesc {
         font-size: 11px;
         color: #cbd5e1;
-        max-width: 440px;
+        max-width: 460px;
         line-height: 1.4;
     }
 
@@ -113,7 +113,7 @@ game_html = """
         text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
     }
 
-    /* 상단 좌측 버튼 배치 (도감 -> 인벤토리 -> 상점) */
+    /* 상단 좌측 버튼 배치 */
     .topBtn {
         position: absolute;
         width: 48px;
@@ -140,7 +140,7 @@ game_html = """
     #shopBtn { top: 144px; left: 20px; }
     #settingsBtn { top: 20px; right: 20px; }
 
-    /* 장착 낚싯대 소형 퀵 뷰 버튼 (인벤토리 오른쪽) */
+    /* 장착 낚싯대 소형 퀵 뷰 버튼 */
     #equippedRodQuickBtn {
         position: absolute;
         top: 88px;
@@ -213,7 +213,6 @@ game_html = """
         max-height: 640px;
     }
 
-    /* 개편된 대형 인벤토리 모달 (`680px`) */
     #inventoryModal {
         width: 680px;
         max-height: 660px;
@@ -347,7 +346,7 @@ game_html = """
         overflow-y: auto;
     }
 
-    /* === 인벤토리(가방) 전용 3분할 레이아웃 (상단 대형 1개 + 하단 소형 2개) === */
+    /* 인벤토리 전용 3분할 레이아웃 */
     #invTopBox {
         background-color: #0f172a;
         border: 1px solid #334155;
@@ -359,7 +358,6 @@ game_html = """
         flex-direction: column;
     }
 
-    /* 잡은 물고기 5열 바둑판 그리드 */
     #invFishGrid {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
@@ -405,9 +403,9 @@ game_html = """
         flex-direction: column;
     }
     #invCategoryButtons {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
         margin-top: 6px;
     }
     #invEquipSelectBox {
@@ -506,18 +504,18 @@ game_html = """
 <div id="gameContainer">
     <canvas id="gameCanvas"></canvas>
     
-    <!-- 좌측 상단 버튼들 (도감 -> 인벤토리 -> 상점 순서) -->
+    <!-- 좌측 상단 버튼들 -->
     <div id="notebookBtn" class="topBtn" title="도감">📖</div>
     <div id="inventoryBtn" class="topBtn" title="인벤토리">🎒</div>
     <div id="shopBtn" class="topBtn" title="상점">🏪</div>
     
-    <!-- 장착 낚싯대 소형 퀵 뷰 (인벤토리 오른쪽) -->
+    <!-- 장착 낚싯대 소형 퀵 뷰 -->
     <div id="equippedRodQuickBtn" title="현재 장착 중인 낚싯대">
         <span>🎣</span>
         <span id="quickRodName">나무 낚싯대</span>
     </div>
 
-    <!-- 간결한 돈 표시 UI -->
+    <!-- 돈 표시 UI -->
     <div id="moneyBar"><span id="moneyText">0</span> &nbsp;$</div>
 
     <!-- 우측 상단 설정 버튼 -->
@@ -572,8 +570,8 @@ game_html = """
                     <button class="categoryBtn" onclick="selectShopCategory('bobber')">🎈 낚시찌</button>
                     <button class="categoryBtn" onclick="selectShopCategory('boat')">⛵ 배</button>
                     <button class="categoryBtn" onclick="selectShopCategory('bait')">🪱 미끼</button>
-                    <button class="categoryBtn" onclick="selectShopCategory('etc1')">❓ ??</button>
-                    <button class="categoryBtn" onclick="selectShopCategory('etc2')">❓ ??</button>
+                    <button class="categoryBtn" onclick="selectShopCategory('pet')">🐾 펫</button>
+                    <button class="categoryBtn" onclick="selectShopCategory('partner')">👨‍🌾 동료</button>
                 </div>
             </div>
 
@@ -594,24 +592,21 @@ game_html = """
         </div>
     </div>
 
-    <!-- 3. 개편된 인벤토리 모달 (상단 큰 칸 1개 + 하단 작은 칸 2개) -->
+    <!-- 3. 인벤토리 모달 -->
     <div id="inventoryModal" class="modal">
         <div class="modalHeader">
             <span class="modalTitle">🎒 인벤토리</span>
             <span id="closeInventory" class="closeBtn">&times;</span>
         </div>
 
-        <!-- 위쪽 큰 칸: 잡은 물고기 (5열 그리드) -->
         <div id="invTopBox">
             <div class="sectionHeaderTitle">🐟 소지 물고기</div>
             <div id="invFishGrid">
-                <!-- JS에서 5열 그리드로 생성 -->
+                <!-- JS 렌더링 -->
             </div>
         </div>
 
-        <!-- 아래쪽 작은 칸 2개 (좌측: 장비 종류 버튼 | 우측: 보유 장비 선택 칸) -->
         <div id="invBottomGrid">
-            <!-- 하단 좌측: 장비 카테고리 셀렉터 -->
             <div id="invCategoryBox">
                 <div class="sectionHeaderTitle">⚙️ 장비 종류</div>
                 <div id="invCategoryButtons">
@@ -619,10 +614,11 @@ game_html = """
                     <button class="categoryBtn" onclick="selectInvCategory('bobber')">🎈 낚시찌</button>
                     <button class="categoryBtn" onclick="selectInvCategory('boat')">⛵ 배</button>
                     <button class="categoryBtn" onclick="selectInvCategory('bait')">🪱 미끼</button>
+                    <button class="categoryBtn" onclick="selectInvCategory('pet')">🐾 펫</button>
+                    <button class="categoryBtn" onclick="selectInvCategory('partner')">👨‍🌾 동료</button>
                 </div>
             </div>
 
-            <!-- 하단 우측: 현재 보유 장비 목록 및 선택/사용 칸 -->
             <div id="invEquipSelectBox">
                 <div class="sectionHeaderTitle" id="invEquipTitleText">🎣 보유 낚싯대</div>
                 <ul id="invEquipItemList" class="itemList" style="max-height: 150px;">
@@ -660,7 +656,7 @@ game_html = """
     <div id="bottomLeftUI">
         <div id="gameTitle">OCEAN ANGLER</div>
         <div id="gameDesc">
-            [Space/Enter] 낚시 시작 | [Space] 게이지 유지 | [ESC] 취소 | [E] 위 물고기 판매 | [Shift+E] 전체 판매
+            [Space/Enter] 낚시 시작 | [Space] 게이지 유지 | [ESC] 취소 | [E] 위 물고기 판매 | [Shift+E] 전체 판매 | [Shift+0] 치트(+1000$)
         </div>
     </div>
 </div>
@@ -728,7 +724,7 @@ let currentShopCategory = 'rod';
 let currentInvCategory = 'rod';
 let equippedRodId = "wood";
 
-// 통합 장비 데이터베이스
+// 통합 상점 DB (펫 & 동료 포함)
 const SHOP_ITEMS = {
     rod: [
         { id: "wood", name: "나무 낚싯대", price: 0, icon: "🎣", desc: "기본 지급되는 단단한 나무 낚싯대", bought: true },
@@ -748,11 +744,17 @@ const SHOP_ITEMS = {
         { id: "ba1", name: "지렁이 미끼", price: 5, icon: "🪱", desc: "일반 물고기 반응을 돕는 미끼", bought: false },
         { id: "ba2", name: "새우 미끼", price: 20, icon: "🦐", desc: "희귀 물고기가 좋아하는 싱싱한 새우", bought: false }
     ],
-    etc1: [
-        { id: "e1", name: "준비 중인 아이템", price: 99999, icon: "❓", desc: "다음 업데이트에 추가될 예정입니다.", bought: false }
+    pet: [
+        { id: "p_dog", name: "개", price: 1000, icon: "🐶", desc: "귀여운 강아지 (효과: 1초당 +1$ 획득)", income: 1, bought: false },
+        { id: "p_cat", name: "고양이", price: 5000, icon: "🐱", desc: "도도한 고양이 (효과: 1초당 +3$ 획득)", income: 3, bought: false },
+        { id: "p_hamster", name: "햄스터", price: 20000, icon: "🐹", desc: "부지런한 햄스터 (효과: 1초당 +5$ 획득)", income: 5, bought: false },
+        { id: "p_capybara", name: "카피바라", price: 100000, icon: "🦫", desc: "느긋한 카피바라 (효과: 1초당 +10$ 획득)", income: 10, bought: false }
     ],
-    etc2: [
-        { id: "e2", name: "준비 중인 아이템", price: 99999, icon: "❓", desc: "다음 업데이트에 추가될 예정입니다.", bought: false }
+    partner: [
+        { id: "pt_kim", name: "김씨", price: 5000, icon: "👨‍🌾", desc: "베테랑 어부 김씨 (30초마다 물고기 자동 낚시)", bought: false },
+        { id: "pt_lee", name: "이씨", price: 25000, icon: "👴", desc: "경력 30년 이씨 (30초마다 물고기 자동 낚시)", bought: false },
+        { id: "pt_park", name: "박씨", price: 100000, icon: "🧔", desc: "강태공 박씨 (30초마다 물고기 자동 낚시)", bought: false },
+        { id: "pt_jang", name: "장씨", price: 500000, icon: "👳", desc: "전설의 어부 장씨 (30초마다 물고기 자동 낚시)", bought: false }
     ]
 };
 
@@ -765,6 +767,24 @@ function updateEquippedRodUI() {
     if (rod) {
         document.getElementById('quickRodName').innerText = rod.name;
     }
+}
+
+function addFishToInventory(fish) {
+    if (!bookRecords.has(fish.id)) {
+        bookRecords.set(fish.id, new Set());
+    }
+    bookRecords.get(fish.id).add(fish.rarity);
+
+    inventoryFish.unshift({
+        id: nextFishId++,
+        name: fish.name,
+        rarity: fish.rarity,
+        rarityName: fish.rarityName,
+        price: fish.price
+    });
+
+    updateInventoryUI();
+    updateShopUI();
 }
 
 function sellFish(index) {
@@ -821,6 +841,49 @@ function equipRod(rodId) {
     }
 }
 
+// 자동 보상 타이머 시스템 (펫 1초 / 동료 30초)
+let petTimer = 0;
+let partnerTimer = 0;
+
+function updatePassiveRewards() {
+    // 1. 펫 골드 자동 수급 (1초마다)
+    petTimer++;
+    if (petTimer >= 60) { // 60fps = 1초
+        petTimer = 0;
+        let incomeSum = 0;
+        SHOP_ITEMS.pet.filter(p => p.bought).forEach(p => {
+            incomeSum += p.income;
+        });
+        if (incomeSum > 0) {
+            playerMoney += incomeSum;
+            updateMoneyUI();
+        }
+    }
+
+    // 2. 동료 자동 낚시 (30초마다) - 확률: 일반 80%, 희귀 19%, 전설 1%
+    partnerTimer++;
+    if (partnerTimer >= 1800) { // 60fps * 30초 = 1800프레임
+        partnerTimer = 0;
+        const boughtPartners = SHOP_ITEMS.partner.filter(p => p.bought);
+        
+        boughtPartners.forEach(partner => {
+            const rand = Math.random();
+            let rarity = 'common';
+            if (rand < 0.80) {
+                rarity = 'common';
+            } else if (rand < 0.99) {
+                rarity = 'rare';
+            } else {
+                rarity = 'legendary';
+            }
+
+            const pool = ALL_FISH_DATABASE.filter(f => f.rarity === rarity);
+            const caught = pool[Math.floor(Math.random() * pool.length)];
+            addFishToInventory(caught);
+        });
+    }
+}
+
 // 게임 내부 상태
 let gameState = 'IDLE';
 let waitTimer = 0;
@@ -848,8 +911,17 @@ function getRandomFish() {
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// 키보드 조작
+// 키보드 조작 및 치트키 (Shift + 0 -> +1000$)
 window.addEventListener('keydown', (e) => {
+    // 치트키: Shift + 0
+    if (e.shiftKey && (e.code === 'Digit0' || e.code === 'Numpad0')) {
+        playerMoney += 1000;
+        updateMoneyUI();
+        updateShopUI();
+        showMessage("💰 [치트] 1,000 $ 획득!", "");
+        return;
+    }
+
     if (e.code === 'KeyE') {
         if (e.shiftKey) {
             sellAllFish();
@@ -941,7 +1013,6 @@ closeInventory.addEventListener('click', hideAllModals);
 closeSettings.addEventListener('click', hideAllModals);
 sellAllBtn.addEventListener('click', sellAllFish);
 
-// 상점 카테고리 선택
 function selectShopCategory(catKey) {
     currentShopCategory = catKey;
     const btns = document.querySelectorAll('#categoryGrid .categoryBtn');
@@ -950,7 +1021,6 @@ function selectShopCategory(catKey) {
     updateShopUI();
 }
 
-// 인벤토리 카테고리 선택
 function selectInvCategory(catKey) {
     currentInvCategory = catKey;
     const btns = document.querySelectorAll('#invCategoryButtons .categoryBtn');
@@ -1020,8 +1090,8 @@ function updateShopUI() {
         bobber: "🎈 낚시찌 상점",
         boat: "⛵ 배 상점",
         bait: "🪱 미끼 상점",
-        etc1: "❓ 준비 중인 상점",
-        etc2: "❓ 준비 중인 상점"
+        pet: "🐾 펫 상점",
+        partner: "👨‍🌾 동료 상점"
     };
 
     document.getElementById('categoryTitleText').innerText = catTitles[currentShopCategory];
@@ -1051,9 +1121,7 @@ function updateShopUI() {
     });
 }
 
-// 개편된 인벤토리 UI 렌더링 (상단 5열 그리드 물고기 + 하단 보유 장비)
 function updateInventoryUI() {
-    // 1. 상단 소지 물고기 5열 바둑판 그리드
     const invFishGrid = document.getElementById('invFishGrid');
     invFishGrid.innerHTML = '';
 
@@ -1072,12 +1140,13 @@ function updateInventoryUI() {
         });
     }
 
-    // 2. 하단 우측 보유 장비 선택 칸
     const catTitles = {
         rod: "🎣 보유 낚싯대",
         bobber: "🎈 보유 낚시찌",
         boat: "⛵ 보유 배",
-        bait: "🪱 보유 미끼"
+        bait: "🪱 보유 미끼",
+        pet: "🐾 보유 펫",
+        partner: "👨‍🌾 고용한 동료"
     };
     document.getElementById('invEquipTitleText').innerText = catTitles[currentInvCategory] || "⚙️ 보유 장비";
 
@@ -1087,7 +1156,7 @@ function updateInventoryUI() {
     const ownedItems = (SHOP_ITEMS[currentInvCategory] || []).filter(i => i.bought);
 
     if (ownedItems.length === 0) {
-        invEquipItemList.innerHTML = '<li style="color: #94a3b8; justify-content: center;">보유 중인 장비가 없습니다.</li>';
+        invEquipItemList.innerHTML = '<li style="color: #94a3b8; justify-content: center;">보유 중인 장비/펫/동료가 없습니다.</li>';
     } else {
         ownedItems.forEach((item) => {
             const li = document.createElement('li');
@@ -1152,6 +1221,7 @@ let waveOffset = 0;
 
 function update() {
     waveOffset += 0.04;
+    updatePassiveRewards(); // 펫/동료 타이머 업데이트
 
     if (gameState === 'RESULT' && resultCooldown > 0) {
         resultCooldown--;
@@ -1207,18 +1277,7 @@ function update() {
             gameState = 'RESULT';
             resultCooldown = 90;
             
-            if (!bookRecords.has(currentFish.id)) {
-                bookRecords.set(currentFish.id, new Set());
-            }
-            bookRecords.get(currentFish.id).add(currentFish.rarity);
-
-            inventoryFish.unshift({
-                id: nextFishId++,
-                name: currentFish.name,
-                rarity: currentFish.rarity,
-                rarityName: currentFish.rarityName,
-                price: currentFish.price
-            });
+            addFishToInventory(currentFish);
 
             showMessage("🎉 낚시 성공!", `✨ [${currentFish.rarityName}] ${currentFish.name}(을)를 낚았습니다! (+${currentFish.price}$)`);
         } else if (catchProgress <= 0) {
@@ -1230,6 +1289,7 @@ function update() {
 }
 
 function drawPixelHatFisherman(x, y) {
+    // 플레이어 배 & 어부
     ctx.fillStyle = '#5c3d2e';
     ctx.fillRect(x - 40, y, 80, 20);
     ctx.fillStyle = '#3d2314';
@@ -1286,6 +1346,42 @@ function drawPixelHatFisherman(x, y) {
         ctx.lineTo(globalTipX, globalTipY + 30);
     }
     ctx.stroke();
+
+    // 동료 렌더링 (캐릭터 좌측 아래 독자적 낚시 진행)
+    const boughtPartners = SHOP_ITEMS.partner.filter(p => p.bought);
+    boughtPartners.forEach((partner, idx) => {
+        const px = x - 120 - (idx * 60);
+        const py = y + 50 + (idx * 15);
+
+        // 동료 배
+        ctx.fillStyle = '#4a2e1b';
+        ctx.fillRect(px - 25, py, 50, 14);
+        
+        // 동료 몸통
+        ctx.fillStyle = '#27ae60';
+        ctx.fillRect(px - 6, py - 18, 12, 18);
+        
+        // 동료 낚싯대 & 줄
+        ctx.strokeStyle = '#95a5a6';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(px + 4, py - 10);
+        ctx.lineTo(px + 30, py - 30);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(px + 30, py - 30);
+        ctx.lineTo(px + 60, py + 20);
+        ctx.stroke();
+
+        // 동료 이름 라벨
+        ctx.fillStyle = '#f1c40f';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(partner.name, px, py - 24);
+    });
 }
 
 function drawBackground() {
@@ -1357,7 +1453,7 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
-// 초기 UI 업데이트
+// 초기 UI 바인딩
 updateMoneyUI();
 updateEquippedRodUI();
 
