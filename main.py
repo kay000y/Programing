@@ -140,6 +140,34 @@ game_html = """
     #shopBtn { top: 144px; left: 20px; }
     #settingsBtn { top: 20px; right: 20px; }
 
+    /* 우측 설정 버튼 아래 능력치(스탯) 표시 전용 UI */
+    #statPanel {
+        position: absolute;
+        top: 82px;
+        right: 20px;
+        width: 140px;
+        background-color: rgba(30, 41, 59, 0.85);
+        border: 2px solid #38bdf8;
+        border-radius: 8px;
+        padding: 8px 10px;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: bold;
+        z-index: 20;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .statRow {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .statVal {
+        color: #fde047;
+    }
+
     /* 장착 낚싯대 소형 퀵 뷰 버튼 */
     #equippedRodQuickBtn {
         position: absolute;
@@ -241,7 +269,7 @@ game_html = """
         color: #ffffff;
     }
 
-    /* 정리된 도감 등급 헤더 박스 */
+    /* 도감 등급 헤더 박스 */
     #rarityRateBox {
         background-color: #0f172a;
         border: 1px solid #334155;
@@ -365,7 +393,7 @@ game_html = """
         max-height: 230px;
     }
 
-    /* 인벤토리 전용 3분할 레이아웃 */
+    /* 인벤토리 레이아웃 */
     #invTopBox {
         background-color: #0f172a;
         border: 1px solid #334155;
@@ -527,8 +555,13 @@ game_html = """
     <!-- 돈 표시 UI -->
     <div id="moneyBar"><span id="moneyText">0</span> &nbsp;$</div>
 
-    <!-- 우측 상단 설정 버튼 -->
+    <!-- 우측 상단 설정 버튼 및 스탯 패널 -->
     <div id="settingsBtn" class="topBtn" title="Settings">⚙️</div>
+    <div id="statPanel">
+        <div class="statRow"><span>💪 근력:</span> <span id="statStr" class="statVal">10</span></div>
+        <div class="statRow"><span>🛡️ 끈기:</span> <span id="statTen" class="statVal">10</span></div>
+        <div class="statRow"><span>🍀 운:</span> <span id="statLuck" class="statVal">10</span></div>
+    </div>
 
     <!-- 1. 도감 모달 -->
     <div id="notebookModal" class="modal">
@@ -537,7 +570,6 @@ game_html = """
             <span id="closeNotebook" class="closeBtn">&times;</span>
         </div>
         
-        <!-- 확률과 가격을 제거하고 등급 뱃지만 표시 -->
         <div id="rarityRateBox">
             <span class="rarityBadge badge-common active" style="font-size: 13px;">일반 (Common)</span>
             <span class="rarityBadge badge-rare active" style="font-size: 13px;">희귀 (Rare)</span>
@@ -549,7 +581,7 @@ game_html = """
         </ul>
     </div>
 
-    <!-- 2. 상점 모달 -->
+    <!-- 2. 상점 모달 (미끼와 배 순서 변경됨) -->
     <div id="shopModal" class="modal">
         <div class="modalHeader">
             <span class="modalTitle">🏪 상점</span>
@@ -566,11 +598,12 @@ game_html = """
                     <button id="sellAllBtn" class="sellAllBtn">Sell All (Shift + E)</button>
                 </div>
 
+                <!-- 3행 2열 카테고리 (미끼 🪱 -> 배 ⛵ 순서 전환) -->
                 <div id="categoryGrid">
                     <button class="categoryBtn active" onclick="selectShopCategory('rod')">🎣 낚싯대</button>
                     <button class="categoryBtn" onclick="selectShopCategory('bobber')">🎈 낚시찌</button>
-                    <button class="categoryBtn" onclick="selectShopCategory('boat')">⛵ 배</button>
                     <button class="categoryBtn" onclick="selectShopCategory('bait')">🪱 미끼</button>
+                    <button class="categoryBtn" onclick="selectShopCategory('boat')">⛵ 배</button>
                     <button class="categoryBtn" onclick="selectShopCategory('pet')">🐾 펫</button>
                     <button class="categoryBtn" onclick="selectShopCategory('partner')">👨‍🌾 동료</button>
                 </div>
@@ -593,7 +626,7 @@ game_html = """
         </div>
     </div>
 
-    <!-- 3. 인벤토리 모달 -->
+    <!-- 3. 인벤토리 모달 (미끼와 배 순서 변경됨) -->
     <div id="inventoryModal" class="modal">
         <div class="modalHeader">
             <span class="modalTitle">🎒 인벤토리</span>
@@ -613,8 +646,8 @@ game_html = """
                 <div id="invCategoryButtons">
                     <button class="categoryBtn active" onclick="selectInvCategory('rod')">🎣 낚싯대</button>
                     <button class="categoryBtn" onclick="selectInvCategory('bobber')">🎈 낚시찌</button>
-                    <button class="categoryBtn" onclick="selectInvCategory('boat')">⛵ 배</button>
                     <button class="categoryBtn" onclick="selectInvCategory('bait')">🪱 미끼</button>
+                    <button class="categoryBtn" onclick="selectInvCategory('boat')">⛵ 배</button>
                     <button class="categoryBtn" onclick="selectInvCategory('pet')">🐾 펫</button>
                     <button class="categoryBtn" onclick="selectInvCategory('partner')">👨‍🌾 동료</button>
                 </div>
@@ -699,7 +732,7 @@ resolutionSelect.addEventListener('change', (e) => applyResolution(e.target.valu
 
 applyResolution('1600x900');
 
-// 모달 외부에서만 기본 휠 이벤트를 차단하여 모달 스크롤을 정상 허용
+// 스크롤 허용 핸들러
 window.addEventListener('wheel', (e) => {
     if (!e.target.closest('.modal')) {
         e.preventDefault();
@@ -712,26 +745,26 @@ window.addEventListener('touchmove', (e) => {
     }
 }, { passive: false });
 
-// 확장된 물고기 15종 DB (일반 6종, 희귀 5종, 전설 4종)
+// 물고기 15종 DB (기본 가격 범위 지정: 일반 5~15, 희귀 25~50, 전설 85~160)
 const ALL_FISH_DATABASE = [
-    { id: 1, name: "고등어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", price: 10 },
-    { id: 2, name: "광어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", price: 10 },
-    { id: 3, name: "우럭", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff", price: 10 },
-    { id: 4, name: "볼락", rarity: "common", rarityName: "일반", difficulty: 0.9, color: "#ffffff", price: 10 },
-    { id: 5, name: "꽁치", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", price: 12 },
-    { id: 6, name: "전갱이", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff", price: 15 },
-    { id: 7, name: "참돔", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6", price: 50 },
-    { id: 8, name: "오징어", rarity: "rare", rarityName: "희귀", difficulty: 1.2, color: "#3b82f6", price: 50 },
-    { id: 9, name: "감성돔", rarity: "rare", rarityName: "희귀", difficulty: 1.4, color: "#3b82f6", price: 60 },
-    { id: 10, name: "연어", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6", price: 70 },
-    { id: 11, name: "문어", rarity: "rare", rarityName: "희귀", difficulty: 1.5, color: "#3b82f6", price: 80 },
-    { id: 12, name: "방어", rarity: "legendary", rarityName: "전설", difficulty: 1.6, color: "#eab308", price: 100 },
-    { id: 13, name: "돗돔", rarity: "legendary", rarityName: "전설", difficulty: 1.8, color: "#eab308", price: 150 },
-    { id: 14, name: "청새치", rarity: "legendary", rarityName: "전설", difficulty: 2.0, color: "#eab308", price: 250 },
-    { id: 15, name: "심해 대왕오징어", rarity: "legendary", rarityName: "전설", difficulty: 2.2, color: "#eab308", price: 500 }
+    { id: 1, name: "고등어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", minPrice: 5, maxPrice: 15 },
+    { id: 2, name: "광어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", minPrice: 5, maxPrice: 15 },
+    { id: 3, name: "우럭", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff", minPrice: 6, maxPrice: 15 },
+    { id: 4, name: "볼락", rarity: "common", rarityName: "일반", difficulty: 0.9, color: "#ffffff", minPrice: 5, maxPrice: 14 },
+    { id: 5, name: "꽁치", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", minPrice: 6, maxPrice: 15 },
+    { id: 6, name: "전갱이", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff", minPrice: 7, maxPrice: 15 },
+    { id: 7, name: "참돔", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6", minPrice: 25, maxPrice: 50 },
+    { id: 8, name: "오징어", rarity: "rare", rarityName: "희귀", difficulty: 1.2, color: "#3b82f6", minPrice: 25, maxPrice: 48 },
+    { id: 9, name: "감성돔", rarity: "rare", rarityName: "희귀", difficulty: 1.4, color: "#3b82f6", minPrice: 28, maxPrice: 50 },
+    { id: 10, name: "연어", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6", minPrice: 30, maxPrice: 50 },
+    { id: 11, name: "문어", rarity: "rare", rarityName: "희귀", difficulty: 1.5, color: "#3b82f6", minPrice: 32, maxPrice: 50 },
+    { id: 12, name: "방어", rarity: "legendary", rarityName: "전설", difficulty: 1.6, color: "#eab308", minPrice: 85, maxPrice: 140 },
+    { id: 13, name: "돗돔", rarity: "legendary", rarityName: "전설", difficulty: 1.8, color: "#eab308", minPrice: 95, maxPrice: 150 },
+    { id: 14, name: "청새치", rarity: "legendary", rarityName: "전설", difficulty: 2.0, color: "#eab308", minPrice: 110, maxPrice: 160 },
+    { id: 15, name: "심해 대왕오징어", rarity: "legendary", rarityName: "전설", difficulty: 2.2, color: "#eab308", minPrice: 125, maxPrice: 160 }
 ];
 
-// 재화 및 데이터
+// 플레이어 재화 및 데이터
 let playerMoney = 0;
 const bookRecords = new Map();
 let inventoryFish = [];
@@ -741,25 +774,25 @@ let currentShopCategory = 'rod';
 let currentInvCategory = 'rod';
 let equippedRodId = "wood";
 
-// 통합 상점 DB
+// 상점 통합 DB (스탯 보너스 부여: 낚싯대->근력, 낚시찌->끈기, 미끼->운)
 const SHOP_ITEMS = {
     rod: [
-        { id: "wood", name: "나무 낚싯대", price: 0, icon: "🎣", desc: "기본 지급되는 단단한 나무 낚싯대", bought: true },
-        { id: "stone", name: "돌 낚싯대", price: 100, icon: "🎣", desc: "묵직하고 튼튼한 돌 재질 낚싯대", bought: false },
-        { id: "iron", name: "철 낚싯대", price: 10000, icon: "🎣", desc: "세련되고 유연한 정밀 철제 낚싯대", bought: false },
-        { id: "gold", name: "금 낚싯대", price: 1000000, icon: "🎣", desc: "황금빛으로 빛나는 최고급 전설의 낚싯대", bought: false }
+        { id: "wood", name: "나무 낚싯대", price: 0, icon: "🎣", desc: "기본 낚싯대 (근력 +0)", strBonus: 0, bought: true },
+        { id: "stone", name: "돌 낚싯대", price: 100, icon: "🎣", desc: "묵직한 돌 낚싯대 (근력 +5)", strBonus: 5, bought: false },
+        { id: "iron", name: "철 낚싯대", price: 10000, icon: "🎣", desc: "정밀 철제 낚싯대 (근력 +15)", strBonus: 15, bought: false },
+        { id: "gold", name: "금 낚싯대", price: 1000000, icon: "🎣", desc: "황금빛 낚싯대 (근력 +40)", strBonus: 40, bought: false }
     ],
     bobber: [
-        { id: "b1", name: "빨간 찌", price: 50, icon: "🎈", desc: "기본 선명한 빨간색 낚시찌", bought: false },
-        { id: "b2", name: "형광 찌", price: 500, icon: "💡", desc: "야간에도 잘 보이는 형광 낚시찌", bought: false }
+        { id: "b1", name: "빨간 찌", price: 50, icon: "🎈", desc: "선명한 빨간 찌 (끈기 +5)", tenBonus: 5, bought: false },
+        { id: "b2", name: "형광 찌", price: 500, icon: "💡", desc: "야간용 형광 찌 (끈기 +15)", tenBonus: 15, bought: false }
+    ],
+    bait: [
+        { id: "ba1", name: "지렁이 미끼", price: 5, icon: "🪱", desc: "기본 미끼 (운 +3)", luckBonus: 3, bought: false },
+        { id: "ba2", name: "새우 미끼", price: 20, icon: "🦐", desc: "싱싱한 새우 (운 +10)", luckBonus: 10, bought: false }
     ],
     boat: [
         { id: "bt1", name: "목선", price: 0, icon: "⛵", desc: "작고 오래된 소형 나무 배", bought: true },
         { id: "bt2", name: "모터보트", price: 50000, icon: "🚤", desc: "바다를 빠르게 가르는 모터보트", bought: false }
-    ],
-    bait: [
-        { id: "ba1", name: "지렁이 미끼", price: 5, icon: "🪱", desc: "일반 물고기 반응을 돕는 미끼", bought: false },
-        { id: "ba2", name: "새우 미끼", price: 20, icon: "🦐", desc: "희귀 물고기가 좋아하는 싱싱한 새우", bought: false }
     ],
     pet: [
         { id: "p_dog", name: "개", price: 1000, icon: "🐶", desc: "귀여운 강아지 (효과: 1초당 +1$ 획득)", income: 1, bought: false },
@@ -775,6 +808,33 @@ const SHOP_ITEMS = {
     ]
 };
 
+// 스탯 계산 및 UI 업데이트
+function calculateStats() {
+    let str = 10;
+    let ten = 10;
+    let luck = 10;
+
+    // 1. 장착된 낚싯대 근력 스탯
+    const eqRod = SHOP_ITEMS.rod.find(r => r.id === equippedRodId);
+    if (eqRod && eqRod.strBonus) str += eqRod.strBonus;
+
+    // 2. 보유한 낚시찌 끈기 스탯 누적
+    SHOP_ITEMS.bobber.filter(b => b.bought).forEach(b => {
+        if (b.tenBonus) ten += b.tenBonus;
+    });
+
+    // 3. 보유한 미끼 운 스탯 누적
+    SHOP_ITEMS.bait.filter(b => b.bought).forEach(b => {
+        if (b.luckBonus) luck += b.luckBonus;
+    });
+
+    document.getElementById('statStr').innerText = str;
+    document.getElementById('statTen').innerText = ten;
+    document.getElementById('statLuck').innerText = luck;
+
+    return { str, ten, luck };
+}
+
 function updateMoneyUI() {
     document.getElementById('moneyText').innerText = playerMoney.toLocaleString();
 }
@@ -784,20 +844,33 @@ function updateEquippedRodUI() {
     if (rod) {
         document.getElementById('quickRodName').innerText = rod.name;
     }
+    calculateStats();
 }
 
-function addFishToInventory(fish) {
-    if (!bookRecords.has(fish.id)) {
-        bookRecords.set(fish.id, new Set());
+// 물고기 획득 시 운 스탯을 반영하여 랜던 가격 결정
+function addFishToInventory(fishTemplate) {
+    if (!bookRecords.has(fishTemplate.id)) {
+        bookRecords.set(fishTemplate.id, new Set());
     }
-    bookRecords.get(fish.id).add(fish.rarity);
+    bookRecords.get(fishTemplate.id).add(fishTemplate.rarity);
+
+    // 운(Luck) 스탯 계산 (최고 단가 가중치 반영)
+    const stats = calculateStats();
+    let luckFactor = Math.random();
+    if (stats.luck > 10) {
+        // 운 스탯이 높을수록 높은 가격이 나올 확률 증가
+        const luckBonusRatio = Math.min(0.6, (stats.luck - 10) * 0.015);
+        luckFactor = Math.pow(luckFactor, 1 - luckBonusRatio);
+    }
+
+    const calculatedPrice = Math.floor(fishTemplate.minPrice + (fishTemplate.maxPrice - fishTemplate.minPrice) * luckFactor);
 
     inventoryFish.unshift({
         id: nextFishId++,
-        name: fish.name,
-        rarity: fish.rarity,
-        rarityName: fish.rarityName,
-        price: fish.price
+        name: fishTemplate.name,
+        rarity: fishTemplate.rarity,
+        rarityName: fishTemplate.rarityName,
+        price: calculatedPrice
     });
 
     updateInventoryUI();
@@ -843,6 +916,7 @@ function buyShopItem(category, itemId) {
             updateEquippedRodUI();
         }
         updateMoneyUI();
+        calculateStats();
         updateShopUI();
         updateInventoryUI();
     }
@@ -858,7 +932,7 @@ function equipRod(rodId) {
     }
 }
 
-// 자동 보상 타이머 시스템 (펫 1초 / 동료 30초)
+// 자동 보상 타이머 시스템
 let petTimer = 0;
 let partnerTimer = 0;
 
@@ -1049,7 +1123,6 @@ function setPreviewItem(item) {
     document.getElementById('previewDesc').innerText = item.desc;
 }
 
-// UI 업데이트 로직들 (15종 물고기 지원)
 function updateNotebookUI() {
     const listEl = document.getElementById('logbookList');
     listEl.innerHTML = '';
@@ -1102,8 +1175,8 @@ function updateShopUI() {
     const catTitles = {
         rod: "🎣 낚싯대 상점",
         bobber: "🎈 낚시찌 상점",
-        boat: "⛵ 배 상점",
         bait: "🪱 미끼 상점",
+        boat: "⛵ 배 상점",
         pet: "🐾 펫 상점",
         partner: "👨‍🌾 동료 상점"
     };
@@ -1148,6 +1221,7 @@ function updateInventoryUI() {
             div.innerHTML = `
                 <div style="font-size: 24px;">🐟</div>
                 <div class="fishCardName">${item.name}</div>
+                <div style="font-size: 11px; color: #fde047; font-weight: bold;">${item.price}$</div>
                 <span class="rarityBadge badge-${item.rarity} active">${item.rarityName}</span>
             `;
             invFishGrid.appendChild(div);
@@ -1157,8 +1231,8 @@ function updateInventoryUI() {
     const catTitles = {
         rod: "🎣 보유 낚싯대",
         bobber: "🎈 보유 낚시찌",
-        boat: "⛵ 보유 배",
         bait: "🪱 보유 미끼",
+        boat: "⛵ 보유 배",
         pet: "🐾 보유 펫",
         partner: "👨‍🌾 고용한 동료"
     };
@@ -1265,6 +1339,11 @@ function update() {
             initMiniGame();
         }
     } else if (gameState === 'FISHING') {
+        const stats = calculateStats();
+
+        // 1. 근력 스탯 반영 (바 크기 확장)
+        barSize = 20 + (stats.str * 0.4);
+
         if (spacePressed) {
             barPos += 1.8;
         } else {
@@ -1284,16 +1363,21 @@ function update() {
         if (fishPos >= barPos && fishPos <= barEnd) {
             catchProgress += 0.4;
         } else {
-            catchProgress -= 0.3;
+            // 2. 끈기 스탯 반영 (게이지 감소율 완화)
+            let decayFactor = Math.max(0.1, 0.3 - (stats.ten * 0.005));
+            catchProgress -= decayFactor;
         }
 
         if (catchProgress >= 100) {
             gameState = 'RESULT';
             resultCooldown = 90;
             
+            // 물고기 획득 처리
             addFishToInventory(currentFish);
 
-            showMessage("🎉 낚시 성공!", `✨ [${currentFish.rarityName}] ${currentFish.name}(을)를 낚았습니다! (+${currentFish.price}$)`);
+            // 가장 최근 낚은 물고기의 획득 가격 가져오기
+            const lastCaught = inventoryFish[0];
+            showMessage("🎉 낚시 성공!", `✨ [${lastCaught.rarityName}] ${lastCaught.name}(을)를 낚았습니다! (+${lastCaught.price}$)`);
         } else if (catchProgress <= 0) {
             gameState = 'RESULT';
             resultCooldown = 90;
@@ -1462,9 +1546,10 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
-// 초기 UI 바인딩
+// 초기 UI 바인딩 및 스탯 계산
 updateMoneyUI();
 updateEquippedRodUI();
+calculateStats();
 
 loop();
 </script>
