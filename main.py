@@ -204,8 +204,8 @@ game_html = """
     }
 
     #notebookModal {
-        width: 520px;
-        max-height: 600px;
+        width: 540px;
+        max-height: 620px;
     }
 
     #shopModal {
@@ -241,7 +241,7 @@ game_html = """
         color: #ffffff;
     }
 
-    /* 도감 헤더 박스 */
+    /* 정리된 도감 등급 헤더 박스 */
     #rarityRateBox {
         background-color: #0f172a;
         border: 1px solid #334155;
@@ -249,19 +249,39 @@ game_html = """
         padding: 10px 14px;
         margin-bottom: 14px;
         display: flex;
-        justify-content: space-between;
-        text-align: center;
-    }
-    .rateInfoCard {
-        display: flex;
-        flex-direction: column;
+        justify-content: space-around;
         align-items: center;
-        gap: 4px;
     }
-    .ratePriceText {
+
+    /* 스크롤 가능한 리스트 공통 스타일 */
+    .itemList {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        overflow-y: auto !important;
+        touch-action: pan-y !important;
+        user-select: auto;
+    }
+    .itemList::-webkit-scrollbar {
+        width: 6px;
+    }
+    .itemList::-webkit-scrollbar-thumb {
+        background-color: #475569;
+        border-radius: 3px;
+    }
+    .itemList::-webkit-scrollbar-track {
+        background-color: #0f172a;
+    }
+
+    .itemList li {
+        padding: 10px 14px;
+        background-color: #334155;
+        margin-bottom: 8px;
+        border-radius: 6px;
         font-size: 13px;
-        font-weight: 800;
-        color: #fde047;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     /* 상점 레이아웃 */
@@ -343,7 +363,6 @@ game_html = """
         border-radius: 8px;
         padding: 12px;
         max-height: 230px;
-        overflow-y: auto;
     }
 
     /* 인벤토리 전용 3분할 레이아웃 */
@@ -362,10 +381,18 @@ game_html = """
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 10px;
-        overflow-y: auto;
+        overflow-y: auto !important;
         padding-right: 4px;
         max-height: 170px;
     }
+    #invFishGrid::-webkit-scrollbar {
+        width: 6px;
+    }
+    #invFishGrid::-webkit-scrollbar-thumb {
+        background-color: #475569;
+        border-radius: 3px;
+    }
+
     .fishCard {
         background-color: #1e293b;
         border: 1px solid #475569;
@@ -417,31 +444,13 @@ game_html = """
         flex-direction: column;
     }
 
-    .itemList {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    .itemList li {
-        padding: 10px 14px;
-        background-color: #334155;
-        margin-bottom: 8px;
-        border-radius: 6px;
-        font-size: 13px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
     .bookItem { padding: 12px 16px !important; }
     .bookFishName { font-size: 15px; font-weight: bold; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
     .bookFishName.unknown { color: #64748b; }
 
     /* 등급 뱃지 */
     .badgeGroup { display: flex; gap: 4px; }
-    .rarityBadge { font-size: 11px; padding: 3px 7px; border-radius: 4px; font-weight: bold; opacity: 0.25; filter: grayscale(80%); }
+    .rarityBadge { font-size: 11px; padding: 4px 10px; border-radius: 4px; font-weight: bold; opacity: 0.3; filter: grayscale(80%); }
     .rarityBadge.active { opacity: 1.0; filter: grayscale(0%); }
     
     .badge-common { background-color: #94a3b8; color: #0f172a; }
@@ -528,22 +537,14 @@ game_html = """
             <span id="closeNotebook" class="closeBtn">&times;</span>
         </div>
         
+        <!-- 확률과 가격을 제거하고 등급 뱃지만 표시 -->
         <div id="rarityRateBox">
-            <div class="rateInfoCard">
-                <span class="rarityBadge badge-common active">일반 (45%)</span>
-                <span class="ratePriceText">10 $</span>
-            </div>
-            <div class="rateInfoCard">
-                <span class="rarityBadge badge-rare active">희귀 (35%)</span>
-                <span class="ratePriceText">50 $</span>
-            </div>
-            <div class="rateInfoCard">
-                <span class="rarityBadge badge-legendary active">전설 (20%)</span>
-                <span class="ratePriceText">100 $</span>
-            </div>
+            <span class="rarityBadge badge-common active" style="font-size: 13px;">일반 (Common)</span>
+            <span class="rarityBadge badge-rare active" style="font-size: 13px;">희귀 (Rare)</span>
+            <span class="rarityBadge badge-legendary active" style="font-size: 13px;">전설 (Legendary)</span>
         </div>
 
-        <ul id="logbookList" class="itemList" style="max-height: 380px;">
+        <ul id="logbookList" class="itemList" style="max-height: 420px;">
             <!-- JS 렌더링 -->
         </ul>
     </div>
@@ -698,20 +699,36 @@ resolutionSelect.addEventListener('change', (e) => applyResolution(e.target.valu
 
 applyResolution('1600x900');
 
-window.addEventListener('wheel', (e) => e.preventDefault(), { passive: false });
-window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+// 모달 외부에서만 기본 휠 이벤트를 차단하여 모달 스크롤을 정상 허용
+window.addEventListener('wheel', (e) => {
+    if (!e.target.closest('.modal')) {
+        e.preventDefault();
+    }
+}, { passive: false });
 
-// 전체 어종 DB
+window.addEventListener('touchmove', (e) => {
+    if (!e.target.closest('.modal')) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+// 확장된 물고기 15종 DB (일반 6종, 희귀 5종, 전설 4종)
 const ALL_FISH_DATABASE = [
     { id: 1, name: "고등어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", price: 10 },
     { id: 2, name: "광어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", price: 10 },
     { id: 3, name: "우럭", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff", price: 10 },
     { id: 4, name: "볼락", rarity: "common", rarityName: "일반", difficulty: 0.9, color: "#ffffff", price: 10 },
-    { id: 5, name: "참돔", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6", price: 50 },
-    { id: 6, name: "오징어", rarity: "rare", rarityName: "희귀", difficulty: 1.2, color: "#3b82f6", price: 50 },
-    { id: 7, name: "감성돔", rarity: "rare", rarityName: "희귀", difficulty: 1.4, color: "#3b82f6", price: 50 },
-    { id: 8, name: "방어", rarity: "legendary", rarityName: "전설", difficulty: 1.6, color: "#eab308", price: 100 },
-    { id: 9, name: "돗돔", rarity: "legendary", rarityName: "전설", difficulty: 1.8, color: "#eab308", price: 100 }
+    { id: 5, name: "꽁치", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", price: 12 },
+    { id: 6, name: "전갱이", rarity: "common", rarityName: "일반", difficulty: 1.1, color: "#ffffff", price: 15 },
+    { id: 7, name: "참돔", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6", price: 50 },
+    { id: 8, name: "오징어", rarity: "rare", rarityName: "희귀", difficulty: 1.2, color: "#3b82f6", price: 50 },
+    { id: 9, name: "감성돔", rarity: "rare", rarityName: "희귀", difficulty: 1.4, color: "#3b82f6", price: 60 },
+    { id: 10, name: "연어", rarity: "rare", rarityName: "희귀", difficulty: 1.3, color: "#3b82f6", price: 70 },
+    { id: 11, name: "문어", rarity: "rare", rarityName: "희귀", difficulty: 1.5, color: "#3b82f6", price: 80 },
+    { id: 12, name: "방어", rarity: "legendary", rarityName: "전설", difficulty: 1.6, color: "#eab308", price: 100 },
+    { id: 13, name: "돗돔", rarity: "legendary", rarityName: "전설", difficulty: 1.8, color: "#eab308", price: 150 },
+    { id: 14, name: "청새치", rarity: "legendary", rarityName: "전설", difficulty: 2.0, color: "#eab308", price: 250 },
+    { id: 15, name: "심해 대왕오징어", rarity: "legendary", rarityName: "전설", difficulty: 2.2, color: "#eab308", price: 500 }
 ];
 
 // 재화 및 데이터
@@ -724,7 +741,7 @@ let currentShopCategory = 'rod';
 let currentInvCategory = 'rod';
 let equippedRodId = "wood";
 
-// 통합 상점 DB (펫 & 동료 포함)
+// 통합 상점 DB
 const SHOP_ITEMS = {
     rod: [
         { id: "wood", name: "나무 낚싯대", price: 0, icon: "🎣", desc: "기본 지급되는 단단한 나무 낚싯대", bought: true },
@@ -846,9 +863,8 @@ let petTimer = 0;
 let partnerTimer = 0;
 
 function updatePassiveRewards() {
-    // 1. 펫 골드 자동 수급 (1초마다)
     petTimer++;
-    if (petTimer >= 60) { // 60fps = 1초
+    if (petTimer >= 60) {
         petTimer = 0;
         let incomeSum = 0;
         SHOP_ITEMS.pet.filter(p => p.bought).forEach(p => {
@@ -860,9 +876,8 @@ function updatePassiveRewards() {
         }
     }
 
-    // 2. 동료 자동 낚시 (30초마다) - 확률: 일반 80%, 희귀 19%, 전설 1%
     partnerTimer++;
-    if (partnerTimer >= 1800) { // 60fps * 30초 = 1800프레임
+    if (partnerTimer >= 1800) {
         partnerTimer = 0;
         const boughtPartners = SHOP_ITEMS.partner.filter(p => p.bought);
         
@@ -913,7 +928,6 @@ function getRandomFish() {
 
 // 키보드 조작 및 치트키 (Shift + 0 -> +1000$)
 window.addEventListener('keydown', (e) => {
-    // 치트키: Shift + 0
     if (e.shiftKey && (e.code === 'Digit0' || e.code === 'Numpad0')) {
         playerMoney += 1000;
         updateMoneyUI();
@@ -1035,7 +1049,7 @@ function setPreviewItem(item) {
     document.getElementById('previewDesc').innerText = item.desc;
 }
 
-// UI 업데이트 로직들
+// UI 업데이트 로직들 (15종 물고기 지원)
 function updateNotebookUI() {
     const listEl = document.getElementById('logbookList');
     listEl.innerHTML = '';
@@ -1221,7 +1235,7 @@ let waveOffset = 0;
 
 function update() {
     waveOffset += 0.04;
-    updatePassiveRewards(); // 펫/동료 타이머 업데이트
+    updatePassiveRewards();
 
     if (gameState === 'RESULT' && resultCooldown > 0) {
         resultCooldown--;
@@ -1289,7 +1303,6 @@ function update() {
 }
 
 function drawPixelHatFisherman(x, y) {
-    // 플레이어 배 & 어부
     ctx.fillStyle = '#5c3d2e';
     ctx.fillRect(x - 40, y, 80, 20);
     ctx.fillStyle = '#3d2314';
@@ -1347,21 +1360,18 @@ function drawPixelHatFisherman(x, y) {
     }
     ctx.stroke();
 
-    // 동료 렌더링 (캐릭터 좌측 아래 독자적 낚시 진행)
+    // 동료 렌더링
     const boughtPartners = SHOP_ITEMS.partner.filter(p => p.bought);
     boughtPartners.forEach((partner, idx) => {
         const px = x - 120 - (idx * 60);
         const py = y + 50 + (idx * 15);
 
-        // 동료 배
         ctx.fillStyle = '#4a2e1b';
         ctx.fillRect(px - 25, py, 50, 14);
         
-        // 동료 몸통
         ctx.fillStyle = '#27ae60';
         ctx.fillRect(px - 6, py - 18, 12, 18);
         
-        // 동료 낚싯대 & 줄
         ctx.strokeStyle = '#95a5a6';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -1376,7 +1386,6 @@ function drawPixelHatFisherman(x, y) {
         ctx.lineTo(px + 60, py + 20);
         ctx.stroke();
 
-        // 동료 이름 라벨
         ctx.fillStyle = '#f1c40f';
         ctx.font = '10px sans-serif';
         ctx.textAlign = 'center';
