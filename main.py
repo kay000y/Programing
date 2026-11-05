@@ -581,7 +581,7 @@ game_html = """
         </ul>
     </div>
 
-    <!-- 2. 상점 모달 (미끼와 배 순서 변경됨) -->
+    <!-- 2. 상점 모달 -->
     <div id="shopModal" class="modal">
         <div class="modalHeader">
             <span class="modalTitle">🏪 상점</span>
@@ -598,7 +598,6 @@ game_html = """
                     <button id="sellAllBtn" class="sellAllBtn">Sell All (Shift + E)</button>
                 </div>
 
-                <!-- 3행 2열 카테고리 (미끼 🪱 -> 배 ⛵ 순서 전환) -->
                 <div id="categoryGrid">
                     <button class="categoryBtn active" onclick="selectShopCategory('rod')">🎣 낚싯대</button>
                     <button class="categoryBtn" onclick="selectShopCategory('bobber')">🎈 낚시찌</button>
@@ -626,7 +625,7 @@ game_html = """
         </div>
     </div>
 
-    <!-- 3. 인벤토리 모달 (미끼와 배 순서 변경됨) -->
+    <!-- 3. 인벤토리 모달 -->
     <div id="inventoryModal" class="modal">
         <div class="modalHeader">
             <span class="modalTitle">🎒 인벤토리</span>
@@ -745,7 +744,7 @@ window.addEventListener('touchmove', (e) => {
     }
 }, { passive: false });
 
-// 물고기 15종 DB (기본 가격 범위 지정: 일반 5~15, 희귀 25~50, 전설 85~160)
+// 물고기 15종 DB (기본 가격 범위: 일반 5~15, 희귀 25~50, 전설 85~160)
 const ALL_FISH_DATABASE = [
     { id: 1, name: "고등어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", minPrice: 5, maxPrice: 15 },
     { id: 2, name: "광어", rarity: "common", rarityName: "일반", difficulty: 1.0, color: "#ffffff", minPrice: 5, maxPrice: 15 },
@@ -774,21 +773,27 @@ let currentShopCategory = 'rod';
 let currentInvCategory = 'rod';
 let equippedRodId = "wood";
 
-// 상점 통합 DB (스탯 보너스 부여: 낚싯대->근력, 낚시찌->끈기, 미끼->운)
+// 새롭게 재정의된 상점 DB (수치/가격/효과 완벽 변경)
 const SHOP_ITEMS = {
     rod: [
-        { id: "wood", name: "나무 낚싯대", price: 0, icon: "🎣", desc: "기본 낚싯대 (근력 +0)", strBonus: 0, bought: true },
-        { id: "stone", name: "돌 낚싯대", price: 100, icon: "🎣", desc: "묵직한 돌 낚싯대 (근력 +5)", strBonus: 5, bought: false },
-        { id: "iron", name: "철 낚싯대", price: 10000, icon: "🎣", desc: "정밀 철제 낚싯대 (근력 +15)", strBonus: 15, bought: false },
-        { id: "gold", name: "금 낚싯대", price: 1000000, icon: "🎣", desc: "황금빛 낚싯대 (근력 +40)", strBonus: 40, bought: false }
+        { id: "wood", name: "나무 낚싯대", price: 0, icon: "🎣", desc: "기본 낚싯대 (근력 +0, 배율 x1)", strBonus: 0, multiplier: 1, bought: true },
+        { id: "stone", name: "돌 낚싯대", price: 100, icon: "🎣", desc: "단단한 돌 낚싯대 (근력 +10, 배율 x2)", strBonus: 10, multiplier: 2, bought: false },
+        { id: "iron", name: "철 낚싯대", price: 1500, icon: "🎣", desc: "정밀 철제 낚싯대 (근력 +30, 배율 x3)", strBonus: 30, multiplier: 3, bought: false },
+        { id: "gold", name: "금 낚싯대", price: 10000, icon: "🎣", desc: "황금 낚싯대 (근력 +65, 배율 x4)", strBonus: 65, multiplier: 4, bought: false },
+        { id: "diamond", name: "다이아 낚싯대", price: 100000, icon: "💎", desc: "최고급 다이아 낚싯대 (근력 +90, 배율 x5)", strBonus: 90, multiplier: 5, bought: false }
     ],
     bobber: [
-        { id: "b1", name: "빨간 찌", price: 50, icon: "🎈", desc: "선명한 빨간 찌 (끈기 +5)", tenBonus: 5, bought: false },
-        { id: "b2", name: "형광 찌", price: 500, icon: "💡", desc: "야간용 형광 찌 (끈기 +15)", tenBonus: 15, bought: false }
+        { id: "b1", name: "빨간 찌", price: 35, icon: "🎈", desc: "기본 빨간 찌 (끈기 +5, 가격 +10$)", tenBonus: 5, addVal: 10, bought: false },
+        { id: "b2", name: "노란 찌", price: 400, icon: "🟡", desc: "선명한 노란 찌 (끈기 +10, 가격 +5$)", tenBonus: 10, addVal: 5, bought: false },
+        { id: "b3", name: "형광 찌", price: 5000, icon: "💡", desc: "야간용 형광 찌 (끈기 +25, 가격 +5$)", tenBonus: 25, addVal: 5, bought: false },
+        { id: "b4", name: "반짝이 찌", price: 50000, icon: "✨", desc: "화려한 반짝이 찌 (끈기 +50, 가격 +5$)", tenBonus: 50, addVal: 5, bought: false }
     ],
     bait: [
-        { id: "ba1", name: "지렁이 미끼", price: 5, icon: "🪱", desc: "기본 미끼 (운 +3)", luckBonus: 3, bought: false },
-        { id: "ba2", name: "새우 미끼", price: 20, icon: "🦐", desc: "싱싱한 새우 (운 +10)", luckBonus: 10, bought: false }
+        { id: "ba1", name: "풀", price: 5, icon: "🌿", desc: "기본 풀 미끼 (운 +3, 가격 +5$)", luckBonus: 3, addVal: 5, bought: false },
+        { id: "ba2", name: "개미", price: 125, icon: "🐜", desc: "작은 개미 (운 +7, 가격 +5$)", luckBonus: 7, addVal: 5, bought: false },
+        { id: "ba3", name: "지렁이", price: 900, icon: "🪱", desc: "통통한 지렁이 (운 +10, 가격 +5$)", luckBonus: 10, addVal: 5, bought: false },
+        { id: "ba4", name: "새우", price: 2500, icon: "🦐", desc: "싱싱한 새우 (운 +20, 가격 +5$)", luckBonus: 20, addVal: 5, bought: false },
+        { id: "ba5", name: "소형 물고기", price: 30000, icon: "🐟", desc: "특제 소형 물고기 미끼 (운 +50, 가격 +5$)", luckBonus: 50, addVal: 5, bought: false }
     ],
     boat: [
         { id: "bt1", name: "목선", price: 0, icon: "⛵", desc: "작고 오래된 소형 나무 배", bought: true },
@@ -814,16 +819,13 @@ function calculateStats() {
     let ten = 10;
     let luck = 10;
 
-    // 1. 장착된 낚싯대 근력 스탯
     const eqRod = SHOP_ITEMS.rod.find(r => r.id === equippedRodId);
     if (eqRod && eqRod.strBonus) str += eqRod.strBonus;
 
-    // 2. 보유한 낚시찌 끈기 스탯 누적
     SHOP_ITEMS.bobber.filter(b => b.bought).forEach(b => {
         if (b.tenBonus) ten += b.tenBonus;
     });
 
-    // 3. 보유한 미끼 운 스탯 누적
     SHOP_ITEMS.bait.filter(b => b.bought).forEach(b => {
         if (b.luckBonus) luck += b.luckBonus;
     });
@@ -847,30 +849,48 @@ function updateEquippedRodUI() {
     calculateStats();
 }
 
-// 물고기 획득 시 운 스탯을 반영하여 랜던 가격 결정
+// 물고기 획득 시 지정된 가격 계산 공식 적용: (랜덤가격 + 찌추가금) * 낚시대배율 + 미끼추가금
 function addFishToInventory(fishTemplate) {
     if (!bookRecords.has(fishTemplate.id)) {
         bookRecords.set(fishTemplate.id, new Set());
     }
     bookRecords.get(fishTemplate.id).add(fishTemplate.rarity);
 
-    // 운(Luck) 스탯 계산 (최고 단가 가중치 반영)
     const stats = calculateStats();
     let luckFactor = Math.random();
     if (stats.luck > 10) {
-        // 운 스탯이 높을수록 높은 가격이 나올 확률 증가
         const luckBonusRatio = Math.min(0.6, (stats.luck - 10) * 0.015);
         luckFactor = Math.pow(luckFactor, 1 - luckBonusRatio);
     }
 
-    const calculatedPrice = Math.floor(fishTemplate.minPrice + (fishTemplate.maxPrice - fishTemplate.minPrice) * luckFactor);
+    // 1. 기본 랜덤 가격
+    const baseRandomPrice = Math.floor(fishTemplate.minPrice + (fishTemplate.maxPrice - fishTemplate.minPrice) * luckFactor);
+
+    // 2. 보유한 낚시찌 추가금 합산
+    let bobberAddSum = 0;
+    SHOP_ITEMS.bobber.filter(b => b.bought).forEach(b => {
+        if (b.addVal) bobberAddSum += b.addVal;
+    });
+
+    // 3. 장착 중인 낚싯대 배율 적용
+    const eqRod = SHOP_ITEMS.rod.find(r => r.id === equippedRodId);
+    const rodMultiplier = eqRod ? (eqRod.multiplier || 1) : 1;
+
+    // 4. 보유한 미끼 추가금 합산
+    let baitAddSum = 0;
+    SHOP_ITEMS.bait.filter(b => b.bought).forEach(b => {
+        if (b.addVal) baitAddSum += b.addVal;
+    });
+
+    // 최종 연산: (랜덤 가격 + 찌 추가금) * 낚시대 배율 + 미끼 추가금
+    const finalPrice = ((baseRandomPrice + bobberAddSum) * rodMultiplier) + baitAddSum;
 
     inventoryFish.unshift({
         id: nextFishId++,
         name: fishTemplate.name,
         rarity: fishTemplate.rarity,
         rarityName: fishTemplate.rarityName,
-        price: calculatedPrice
+        price: finalPrice
     });
 
     updateInventoryUI();
@@ -1165,8 +1185,8 @@ function updateShopUI() {
         inventoryFish.forEach((item, idx) => {
             const li = document.createElement('li');
             li.innerHTML = `
-                <span>🐟 ${item.name} (${item.price}$)</span>
-                <button class="actionBtn" onclick="sellFish(${idx})">Sell (${item.price}$)</button>
+                <span>🐟 ${item.name} (${item.price.toLocaleString()}$)</span>
+                <button class="actionBtn" onclick="sellFish(${idx})">Sell (${item.price.toLocaleString()}$)</button>
             `;
             shopListEl.appendChild(li);
         });
@@ -1221,7 +1241,7 @@ function updateInventoryUI() {
             div.innerHTML = `
                 <div style="font-size: 24px;">🐟</div>
                 <div class="fishCardName">${item.name}</div>
-                <div style="font-size: 11px; color: #fde047; font-weight: bold;">${item.price}$</div>
+                <div style="font-size: 11px; color: #fde047; font-weight: bold;">${item.price.toLocaleString()}$</div>
                 <span class="rarityBadge badge-${item.rarity} active">${item.rarityName}</span>
             `;
             invFishGrid.appendChild(div);
@@ -1364,7 +1384,7 @@ function update() {
             catchProgress += 0.4;
         } else {
             // 2. 끈기 스탯 반영 (게이지 감소율 완화)
-            let decayFactor = Math.max(0.1, 0.3 - (stats.ten * 0.005));
+            let decayFactor = Math.max(0.08, 0.3 - (stats.ten * 0.004));
             catchProgress -= decayFactor;
         }
 
@@ -1372,12 +1392,10 @@ function update() {
             gameState = 'RESULT';
             resultCooldown = 90;
             
-            // 물고기 획득 처리
             addFishToInventory(currentFish);
 
-            // 가장 최근 낚은 물고기의 획득 가격 가져오기
             const lastCaught = inventoryFish[0];
-            showMessage("🎉 낚시 성공!", `✨ [${lastCaught.rarityName}] ${lastCaught.name}(을)를 낚았습니다! (+${lastCaught.price}$)`);
+            showMessage("🎉 낚시 성공!", `✨ [${lastCaught.rarityName}] ${lastCaught.name}(을)를 낚았습니다! (+${lastCaught.price.toLocaleString()}$)`);
         } else if (catchProgress <= 0) {
             gameState = 'RESULT';
             resultCooldown = 90;
@@ -1416,6 +1434,7 @@ function drawPixelHatFisherman(x, y) {
     if (equippedRodId === 'stone') rodColor = '#94a3b8';
     else if (equippedRodId === 'iron') rodColor = '#38bdf8';
     else if (equippedRodId === 'gold') rodColor = '#eab308';
+    else if (equippedRodId === 'diamond') rodColor = '#06b6d4';
 
     ctx.strokeStyle = rodColor;
     ctx.lineWidth = 4;
